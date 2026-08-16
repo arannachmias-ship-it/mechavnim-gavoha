@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+:root {
+  --background: #fffdf7;
+  --foreground: #1f2937;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+html { font-size: 17px; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Assistant", "Heebo", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+.katex { direction: ltr; unicode-bidi: isolate; font-size: 1.15em; }
+.math-line { direction: ltr; unicode-bidi: isolate; text-align: left; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+
+math-field {
+  direction: ltr;
+  display: block;
+  width: 100%;
+  font-size: 1.5rem;
+  padding: 10px 12px;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  background: white;
+  --caret-color: #d97706;
+  --selection-background-color: #fde68a;
+}
+math-field:focus-within { border-color: #f59e0b; outline: none; box-shadow: 0 0 0 3px #fde68a; }
+math-field::part(virtual-keyboard-toggle) { display: none; }
+math-field::part(menu-toggle) { display: none; }
+
+.card { @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-4; }
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100; }
+.btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 bg-amber-500 text-white hover:bg-amber-600 shadow; }
+.btn-soft { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 bg-slate-100 text-slate-700 hover:bg-slate-200; }
+.btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 text-slate-600 hover:bg-slate-100; }
+.chip { @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold; }
+
+@keyframes pop { 0% { transform: scale(0.6); opacity: 0 } 70% { transform: scale(1.1); opacity: 1 } 100% { transform: scale(1) } }
+.animate-pop { animation: pop .35s ease-out both; }
+@keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+.animate-shake { animation: shake .3s ease-in-out; }
+@keyframes floaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+.animate-floaty { animation: floaty 2s ease-in-out infinite; }
+
+/* inline virtual keyboard host */
+#kb-host { position: relative; height: 0; overflow: hidden; transition: height .15s ease; direction: ltr; }
+#kb-host.kb-open { height: 232px; }
+#kb-host .ML__keyboard { position: absolute !important; inset: 0 !important; height: 100% !important; --keycap-height: 46px; --keycap-font-size: 20px; --keycap-small-font-size: 14px; --keyboard-padding-horizontal: 4px; --keyboard-padding-top: 4px; --keyboard-padding-bottom: 4px; box-shadow: none; }
+#kb-host .ML__keyboard .MLK__backdrop { position: absolute; inset: 0; }

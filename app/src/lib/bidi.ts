@@ -8,7 +8,7 @@ const LRI = "⁦";
 const PDI = "⁩";
 
 // characters that may appear inside a math run
-const TOK = "A-Za-z0-9()\\[\\]{}+\\-−*/^=<>≤≥≠·×÷±.,'\"²³⁴√∞|";
+const TOK = "A-Za-z0-9()\\[\\]{}+\\-−*/^=<>≤≥≠·×÷±.,'\"²³⁴√∞…|";
 // a run must contain at least one of these to count as math
 const STRONG = /[=^²³⁴√+\-−*/×÷±≤≥≠]|[A-Za-z0-9][()]|[()][A-Za-z0-9]/;
 
