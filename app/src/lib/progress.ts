@@ -227,6 +227,7 @@ export const MISTAKE_LABELS: Record<string, string> = {
   domain_missing: "תחום הצבה חסר ערך",
   domain_wrong: "תחום הצבה – ערך שגוי",
   pm: "חזקה זוגית – שכחה את ±",
+  order: "סדר פעולות – נכון אבל לא משמאל לימין (הרגל)",
   pair_order: "סדר בתוך זוג (משמאל לימין)",
   abc: "a, b, c – סימנים",
   formula: "נוסחת השורשים – הצבה",

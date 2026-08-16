@@ -89,6 +89,7 @@ export default function PhotoPage() {
         <section className="card border-2 border-amber-200 bg-amber-50 space-y-2">
           <div className="font-bold">מצלמים תרגיל מהדף – ומתרגלים אותו כאן, עם רמזים בשיטה של אבא.</div>
           <div className="text-sm text-slate-600">צלמי ישר, קרוב, באור טוב. עדיף תרגיל אחד או שניים בכל צילום. המחשב רק <b>קורא</b> את התמונה – את הבדיקה של הפתרון עושה המנוע הרגיל, שורה-שורה.</div>
+          <div className="text-xs text-amber-800/80">💡 הקריאה של התמונה היא שירות בתשלום (כמה אגורות לצילום) – אז משתמשים בו בחוכמה: כשיש תרגיל מהדף שבאמת רוצים לתרגל כאן. לתרגול חופשי – מפת הנושאים חינם ובלי הגבלה.</div>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
           <div className="flex gap-2 flex-wrap">
             <button className="btn-primary text-lg" disabled={busy} onClick={() => fileRef.current?.click()}>

@@ -64,4 +64,6 @@ export interface CheckResult {
   detail?: string;
   /** machine-readable mistake key for analytics (e.g. "divx", "pow_sum", "domain_first", "pm", "pair_order") */
   mistake?: string;
+  /** accepted, but with a habit warning (e.g. correct value, wrong order of operations) – shown amber */
+  warn?: string;
 }

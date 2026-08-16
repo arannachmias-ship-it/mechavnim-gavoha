@@ -188,6 +188,7 @@ export default function PracticePage() {
     if (res.status === "ok" || res.status === "done") {
       const hist = [...history, raw];
       setHistory(hist);
+      if (res.warn && res.mistake) setMistakes((m) => [...m, res.mistake!]);
       fieldRef.current?.clear();
       setHintLevel(0);
       if (res.status === "done") finish(ex, hist);
@@ -293,8 +294,13 @@ export default function PracticePage() {
 
         {/* feedback */}
         {result && !done && (
-          <div key={shake} className={`rounded-xl p-3 text-sm leading-relaxed ${result.status === "ok" ? "bg-emerald-50 text-emerald-800" : result.status === "wrong" || result.status === "unparsable" ? "bg-red-50 text-red-800 animate-shake" : "bg-slate-50 text-slate-700"}`}>
+          <div key={shake} className={`rounded-xl p-3 text-sm leading-relaxed ${result.warn ? "bg-amber-50 text-amber-900 border border-amber-200" : result.status === "ok" ? "bg-emerald-50 text-emerald-800" : result.status === "wrong" || result.status === "unparsable" ? "bg-red-50 text-red-800 animate-shake" : "bg-slate-50 text-slate-700"}`}>
             <Txt s={result.status === "ok" && !result.message.startsWith("👀") ? `✔ ${result.message}` : result.message} />
+            {result.warn && (
+              <div className="mt-1 font-medium">
+                ⚠️ <Txt s={result.warn} />
+              </div>
+            )}
           </div>
         )}
 

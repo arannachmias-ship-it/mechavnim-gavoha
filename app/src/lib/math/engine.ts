@@ -14,6 +14,7 @@ import {
   math,
 } from "./check";
 import type { Exercise, CheckResult } from "./types";
+import { checkOrder, isNumericLine } from "./orderCheck";
 
 const near = (a: number, b: number) => Math.abs(a - b) < 1e-6 * Math.max(1, Math.abs(a));
 
@@ -166,6 +167,20 @@ function checkExpr(ex: Exercise, history: string[], input: string): CheckResult 
   if (form === "expanded") done = sc <= fc && !hasSumInsideProductOrPower(node);
   else if (form === "factored") done = sc <= fc && isProductForm(node);
   else done = sc <= fc;
+  // בדיקת תהליך בביטויים מספריים: נכון מתמטית – אבל האם לפי הסדר של השיטה?
+  if (prev && isNumericLine(prev) && isNumericLine(plain)) {
+    const ord = checkOrder(prev, plain);
+    if (!ord.unknown && !ord.inOrder) {
+      const first = ord.expectedFirst ? ` קודם ${ord.expectedFirst}.` : "";
+      return {
+        status: done ? "done" : "ok",
+        message: done ? "התוצאה נכונה. ✔" : "נכון מתמטית – מקבלים.",
+        warn: `אבל זה לא הסדר של השיטה: סנובים קודם, ובתוך זוג – משמאל לימין, לפי מי שהגיע ראשון.${first} ככה עובדים מסודר ולא מסתבכים.`,
+        stage: done ? ex.stages.length : stage,
+        mistake: "order",
+      };
+    }
+  }
   if (done) return { status: "done", message: "יפה! זה מסודר עד הסוף. ✔", stage: ex.stages.length };
   return { status: "ok", message: "נכון, ממשיכים.", stage };
 }
