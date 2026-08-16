@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FORMULAS } from "@/content/formulas";
 import { Math as M, Txt } from "@/components/MathText";
 
@@ -19,7 +20,7 @@ export default function FormulaSheet({ compact = false }: { compact?: boolean })
       <button className={compact ? "btn-ghost text-sm px-2" : "btn-soft text-sm"} onClick={() => setOpen(true)} title="נוסחאון 4 יח״ל">
         📄 נוסחאון
       </button>
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setOpen(false)}>
           <div className="bg-white w-full max-w-2xl max-h-[88vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 p-3 border-b">
@@ -46,7 +47,8 @@ export default function FormulaSheet({ compact = false }: { compact?: boolean })
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

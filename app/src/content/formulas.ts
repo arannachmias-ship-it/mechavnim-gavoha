@@ -19,7 +19,7 @@ export const FORMULAS: FormulaSection[] = [
       { latex: "(a+b)^2=a^2+2ab+b^2", note: "כפל מקוצר – האצבע" },
       { latex: "(a-b)^2=a^2-2ab+b^2" },
       { latex: "(a+b)(a-b)=a^2-b^2", note: "התאומים ההפוכים" },
-      { latex: "x_{1,2}=\\dfrac{-b\\pm\\sqrt{b^2-4ac}}{2a}", note: "נוסחת השורשים ל-ax²+bx+c=0 – שלוש שורות a, b, c לפני שנוגעים" },
+      { latex: "x_{1,2}=\\dfrac{-b\\pm\\sqrt{b^2-4ac}}{2a}", note: "נוסחת השורשים – שלוש שורות a, b, c לפני שנוגעים" },
     ],
   },
   {
