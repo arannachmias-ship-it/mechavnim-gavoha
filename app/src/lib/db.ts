@@ -59,6 +59,7 @@ async function ensureSchema() {
   await sql`CREATE INDEX IF NOT EXISTS attempts_profile_idx ON attempts(profile, created_at)`;
   await sql`ALTER TABLE attempts ADD COLUMN IF NOT EXISTS first_input_sec INT`;
   await sql`ALTER TABLE attempts ADD COLUMN IF NOT EXISTS skipped BOOLEAN NOT NULL DEFAULT false`;
+  await sql`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
   ensured = true;
 }
 
@@ -98,4 +99,43 @@ export async function listAttempts(profile: string, limit = 2000): Promise<Attem
     first_input_sec: r.first_input_sec ?? null,
     skipped: !!r.skipped,
   }));
+}
+
+/* ---------------- settings (encrypted values) ---------------- */
+export interface SettingRow {
+  key: string;
+  value: string;
+  updated_at: string;
+}
+const memSettings = new Map<string, SettingRow>();
+
+export async function getSetting(key: string): Promise<SettingRow | null> {
+  const sql = sqlClient();
+  if (!sql) return memSettings.get(key) ?? null;
+  await ensureSchema();
+  const rows = (await sql`SELECT key, value, updated_at FROM settings WHERE key = ${key}`) as unknown as SettingRow[];
+  if (!rows.length) return null;
+  const r = rows[0];
+  return { ...r, updated_at: typeof r.updated_at === "string" ? r.updated_at : new Date(r.updated_at as unknown as Date).toISOString() };
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  const sql = sqlClient();
+  if (!sql) {
+    memSettings.set(key, { key, value, updated_at: new Date().toISOString() });
+    return;
+  }
+  await ensureSchema();
+  await sql`INSERT INTO settings (key, value, updated_at) VALUES (${key}, ${value}, now())
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`;
+}
+
+export async function deleteSetting(key: string): Promise<void> {
+  const sql = sqlClient();
+  if (!sql) {
+    memSettings.delete(key);
+    return;
+  }
+  await ensureSchema();
+  await sql`DELETE FROM settings WHERE key = ${key}`;
 }

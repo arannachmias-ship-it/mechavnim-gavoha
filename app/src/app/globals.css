@@ -53,7 +53,8 @@ math-field::part(menu-toggle) { display: none; }
 .animate-floaty { animation: floaty 2s ease-in-out infinite; }
 
 /* inline virtual keyboard host */
-#kb-host { position: relative; height: 0; overflow: hidden; transition: height .15s ease; direction: ltr; }
-#kb-host.kb-open { height: 232px; }
-#kb-host .ML__keyboard { position: absolute !important; inset: 0 !important; height: 100% !important; --keycap-height: 46px; --keycap-font-size: 20px; --keycap-small-font-size: 14px; --keyboard-padding-horizontal: 4px; --keyboard-padding-top: 4px; --keyboard-padding-bottom: 4px; box-shadow: none; }
-#kb-host .ML__keyboard .MLK__backdrop { position: absolute; inset: 0; }
+/* MathLive virtual keyboard (standard bottom sheet). --kbh is published by MathField.tsx */
+:root { --kbh: 0px; }
+.ML__keyboard { --keycap-height: 46px; --keycap-font-size: 20px; --keycap-small-font-size: 14px; direction: ltr; z-index: 40; }
+.input-bar { bottom: var(--kbh, 0px); transition: bottom .12s ease; }
+html.kb-open main { padding-bottom: calc(10rem + var(--kbh)); }

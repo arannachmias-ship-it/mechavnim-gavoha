@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
 import type { MathfieldElement } from "mathlive";
 
 export interface MathFieldHandle {
@@ -29,7 +29,15 @@ async function setup() {
     ml.MathfieldElement.soundsDirectory = null;
     ml.MathfieldElement.locale = "he";
     // custom compact keyboard
-    const kb = (window as unknown as { mathVirtualKeyboard: { layouts: unknown } }).mathVirtualKeyboard;
+    const kb = (window as unknown as { mathVirtualKeyboard: { layouts: unknown; addEventListener: (t: string, f: () => void) => void; visible: boolean; boundingRect: DOMRect } }).mathVirtualKeyboard;
+    // keep the app's fixed bottom bar above the keyboard: publish keyboard height as a CSS variable
+    const publish = () => {
+      const h = kb.visible ? Math.round(kb.boundingRect.height) : 0;
+      document.documentElement.style.setProperty("--kbh", `${h}px`);
+      document.documentElement.classList.toggle("kb-open", h > 0);
+    };
+    kb.addEventListener("geometrychange", publish);
+    kb.addEventListener("virtual-keyboard-toggle", publish);
     kb.layouts = [
       {
         label: "מקלדת",
@@ -86,6 +94,7 @@ async function setup() {
 const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeholder, onEnter, onChange, autoFocus, keyboardHostId }, ref) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mfRef = useRef<MathfieldElement | null>(null);
+  const [empty, setEmpty] = useState(true);
   const onEnterRef = useRef(onEnter);
   const onChangeRef = useRef(onChange);
   onEnterRef.current = onEnter;
@@ -93,9 +102,15 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
 
   useImperativeHandle(ref, () => ({
     getValue: () => mfRef.current?.getValue("latex") ?? "",
-    setValue: (v: string) => mfRef.current?.setValue(v),
+    setValue: (v: string) => {
+      mfRef.current?.setValue(v);
+      setEmpty(!v.trim());
+    },
     focus: () => mfRef.current?.focus(),
-    clear: () => mfRef.current?.setValue(""),
+    clear: () => {
+      mfRef.current?.setValue("");
+      setEmpty(true);
+    },
     insert: (v: string) => {
       mfRef.current?.focus();
       mfRef.current?.insert(v);
@@ -111,27 +126,23 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       mf.mathVirtualKeyboardPolicy = "manual";
       mf.smartFence = true;
       mf.smartSuperscript = true;
-      mf.setAttribute("placeholder", placeholder ?? "");
+      void placeholder; // MathLive placeholders are LaTeX-only (no Hebrew) – we overlay our own hint instead
       hostRef.current.innerHTML = "";
       hostRef.current.appendChild(mf);
       mfRef.current = mf;
-      const kb = (window as unknown as { mathVirtualKeyboard: { show: () => void; hide: () => void; container: HTMLElement | null } }).mathVirtualKeyboard;
-      const host = keyboardHostId ? document.getElementById(keyboardHostId) : null;
-      if (host) kb.container = host;
-      mf.addEventListener("focusin", () => {
-        kb.show();
-        host?.classList.add("kb-open");
-      });
+      const kb = (window as unknown as { mathVirtualKeyboard: { show: () => void; hide: () => void } }).mathVirtualKeyboard;
+      void keyboardHostId; // (legacy) the keyboard is now MathLive's standard bottom-sheet – reliable on phones
+      mf.addEventListener("focusin", () => kb.show());
       mf.addEventListener("focusout", () => {
-        // keep keyboard open when tapping keyboard itself; hide when leaving the field entirely
         setTimeout(() => {
-          if (document.activeElement !== mf) {
-            kb.hide();
-            host?.classList.remove("kb-open");
-          }
+          if (document.activeElement !== mf) kb.hide();
         }, 150);
       });
-      mf.addEventListener("input", () => onChangeRef.current?.(mf!.getValue("latex")));
+      mf.addEventListener("input", () => {
+        const v = mf!.getValue("latex");
+        setEmpty(!v.trim());
+        onChangeRef.current?.(v);
+      });
       mf.addEventListener("change", () => onEnterRef.current?.());
       mf.addEventListener("keydown", (e: KeyboardEvent) => {
         if (e.key === "Enter") {
@@ -148,6 +159,15 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={hostRef} className="min-h-[58px]" />;
+  return (
+    <div className="relative">
+      <div ref={hostRef} className="min-h-[58px]" />
+      {empty && placeholder && (
+        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400 text-base select-none" aria-hidden>
+          {placeholder}
+        </span>
+      )}
+    </div>
+  );
 });
 export default MathField;

@@ -328,13 +328,13 @@ export default function PracticePage() {
 
         {/* input area – fixed bottom */}
         {!done && ex && (
-          <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t p-3 z-10">
+          <div className="input-bar fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t p-3 z-10">
             <div className="max-w-3xl mx-auto space-y-2">
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <MathField
                     ref={fieldRef}
-                    placeholder="\\text{השורה הבאה}"
+                    placeholder="השורה הבאה…"
                     onEnter={submit}
                     autoFocus
                     keyboardHostId="kb-host"
@@ -374,7 +374,6 @@ export default function PracticePage() {
                   דלג
                 </button>
               </div>
-              <div id="kb-host" />
               {showFinal && (
                 <div className="text-sm text-slate-600 flex items-center gap-2">
                   <span>לדלג? התרגיל יירשם כלא-פתור.</span>
