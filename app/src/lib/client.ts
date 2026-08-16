@@ -4,6 +4,7 @@ import type { Summary } from "./progress";
 
 export function useProgress() {
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [profile, setProfile] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const reload = useCallback(async () => {
     try {
@@ -14,6 +15,7 @@ export function useProgress() {
       }
       const j = await r.json();
       setSummary(j.summary);
+      setProfile(j.profile ?? null);
     } catch {
       setError("network");
     }
@@ -21,7 +23,7 @@ export function useProgress() {
   useEffect(() => {
     reload();
   }, [reload]);
-  return { summary, error, reload };
+  return { summary, profile, error, reload };
 }
 
 export async function logAttempt(body: Record<string, unknown>) {

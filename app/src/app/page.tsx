@@ -9,12 +9,12 @@ export default function Home() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function login(profile: "noga" | "parent") {
+  async function login(profile: "noga" | "parent" | "tester") {
     setBusy(true);
     setErr("");
     const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profile, pin }) });
     setBusy(false);
-    if (r.ok) router.push(profile === "noga" ? "/learn" : "/parent");
+    if (r.ok) router.push(profile === "parent" ? "/parent" : "/learn");
     else setErr("קוד שגוי, נסה שוב");
   }
 
@@ -62,12 +62,16 @@ export default function Home() {
             {err && <div className="text-red-600 text-sm">{err}</div>}
             <div className="flex gap-2">
               <button className="btn-primary flex-1" disabled={busy}>
-                כניסה
+                מסך הורה
               </button>
-              <button type="button" className="btn-soft" onClick={() => setPinMode(false)}>
+              <button type="button" className="btn-soft flex-1" disabled={busy} onClick={() => login("tester")} title="לנסות את האפליקציה כמו נגה – בלי שיירשם">
+                🧪 לבדוק את האפליקציה
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => setPinMode(false)}>
                 ביטול
               </button>
             </div>
+            <div className="text-xs text-slate-500">"לבדוק את האפליקציה" נכנס למסכים של נגה עם הקוד שלך – ושום תרגיל לא נרשם לה.</div>
           </form>
         )}
       </div>

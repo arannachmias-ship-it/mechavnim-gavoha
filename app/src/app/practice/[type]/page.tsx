@@ -35,7 +35,7 @@ export default function PracticePage() {
   const topic = TOPIC_BY_ID[topicId];
   const typeInfo = topic?.types.find((t) => t.id === typeId);
   const router = useRouter();
-  const { summary, error, reload } = useProgress();
+  const { summary, profile, error, reload } = useProgress();
 
   const [level, setLevel] = useState(1);
   const [ex, setEx] = useState<Exercise | null>(null);
@@ -239,7 +239,7 @@ export default function PracticePage() {
 
   return (
     <>
-      <TopBar summary={summary} back={`/learn/${topicId}`} title={`🎯 ${typeInfo.title}`} />
+      <TopBar tester={profile === "tester"} summary={summary} back={`/learn/${topicId}`} title={`🎯 ${typeInfo.title}`} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-40 space-y-3">
         <div className="flex items-center gap-2 text-sm">
           <span className="chip bg-slate-100">רמה {"⭐".repeat(level)}</span>

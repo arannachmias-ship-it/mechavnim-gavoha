@@ -73,6 +73,18 @@ export async function insertAttempt(a: NewAttempt): Promise<void> {
     VALUES (${a.profile}, ${a.type_id}, ${a.topic_id}, ${a.level}, ${a.correct}, ${a.hints}, ${a.reveals}, ${a.wrong_lines}, ${a.duration_sec}, ${JSON.stringify(a.lines)}, ${a.prompt}, ${JSON.stringify(a.mistakes)}, ${a.first_input_sec}, ${a.skipped})`;
 }
 
+export async function deleteAttempts(profile: string): Promise<number> {
+  const sql = sqlClient();
+  if (!sql) {
+    const before = memory.length;
+    for (let i = memory.length - 1; i >= 0; i--) if (memory[i].profile === profile) memory.splice(i, 1);
+    return before - memory.length;
+  }
+  await ensureSchema();
+  const rows = (await sql`DELETE FROM attempts WHERE profile = ${profile} RETURNING id`) as unknown as { id: number }[];
+  return rows.length;
+}
+
 export async function listAttempts(profile: string, limit = 2000): Promise<AttemptRow[]> {
   const sql = sqlClient();
   if (!sql) return memory.filter((m) => m.profile === profile).slice(-limit);

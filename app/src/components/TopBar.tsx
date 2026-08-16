@@ -3,9 +3,10 @@ import Link from "next/link";
 import type { Summary } from "@/lib/progress";
 import FormulaSheet from "@/components/FormulaSheet";
 
-export default function TopBar({ summary, back, title, formulas = false }: { summary: Summary | null; back?: string; title?: string; formulas?: boolean }) {
+export default function TopBar({ summary, back, title, formulas = false, tester = false }: { summary: Summary | null; back?: string; title?: string; formulas?: boolean; tester?: boolean }) {
   return (
     <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-amber-100">
+      {tester && <div className="bg-violet-600 text-white text-center text-xs py-1">🧪 מצב בדיקה (אבא) – שום דבר לא נרשם לנגה</div>}
       <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-3">
         {back ? (
           <Link href={back} className="btn-ghost px-2 text-xl" aria-label="חזרה">

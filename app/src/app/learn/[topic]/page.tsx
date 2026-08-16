@@ -11,7 +11,7 @@ import Animation from "@/components/Animation";
 export default function TopicPage() {
   const params = useParams<{ topic: string }>();
   const topic = TOPIC_BY_ID[params.topic];
-  const { summary, error } = useProgress();
+  const { summary, profile, error } = useProgress();
   const router = useRouter();
   const [tab, setTab] = useState<"method" | "example" | "video">("method");
   const [exStep, setExStep] = useState(0);
@@ -22,7 +22,7 @@ export default function TopicPage() {
 
   return (
     <>
-      <TopBar formulas summary={summary} back="/learn" title={`${topic.emoji} ${topic.title}`} />
+      <TopBar formulas tester={profile === "tester"} summary={summary} back="/learn" title={`${topic.emoji} ${topic.title}`} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-24 space-y-4">
         <p className="text-slate-600"><Txt s={topic.subtitle} /></p>
 

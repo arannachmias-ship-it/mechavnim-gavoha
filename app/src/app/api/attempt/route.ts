@@ -21,6 +21,7 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   const profile = await getProfile();
+  if (profile === "tester") return NextResponse.json({ ok: true, ignored: true }); // מצב בדיקה – לא נרשם
   if (profile !== "noga") return NextResponse.json({ ok: false }, { status: 401 });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ ok: false, error: "bad body" }, { status: 400 });

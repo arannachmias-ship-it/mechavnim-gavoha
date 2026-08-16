@@ -215,7 +215,21 @@ export default function ParentPage() {
             {summary.recent.length === 0 && <div className="text-slate-500 text-sm">עדיין אין תרגילים.</div>}
           </div>
         </section>
-        <div className="text-center">
+        <div className="text-center space-y-2">
+          <button
+            className="btn-ghost text-sm text-red-600"
+            onClick={async () => {
+              if (!confirm("למחוק את כל נתוני התרגול של נגה? זה בלתי הפיך.")) return;
+              if (!confirm("בטוח? כל ההיסטוריה, הנקודות והרצף יימחקו.")) return;
+              const r = await fetch("/api/admin", { method: "DELETE" });
+              const j = await r.json().catch(() => ({}));
+              alert(j.ok ? `נמחקו ${j.deleted} רשומות.` : "לא הצליח.");
+              location.reload();
+            }}
+          >
+            🗑 מחיקת כל נתוני התרגול (למשל אחרי בדיקות)
+          </button>
+          <br />
           <button
             className="btn-ghost text-sm"
             onClick={async () => {

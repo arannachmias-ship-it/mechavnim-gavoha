@@ -17,7 +17,7 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function LearnHome() {
-  const { summary, error } = useProgress();
+  const { summary, profile, error } = useProgress();
   const router = useRouter();
   useEffect(() => {
     if (error === "unauth") router.replace("/");
@@ -28,7 +28,7 @@ export default function LearnHome() {
 
   return (
     <>
-      <TopBar formulas summary={summary} title="היי נגה 👋" />
+      <TopBar formulas tester={profile === "tester"} summary={summary} title="היי נגה 👋" />
       <main className="max-w-3xl mx-auto w-full p-4 pb-16 space-y-5">
         {summary && (
           <section className="grid grid-cols-3 gap-2">

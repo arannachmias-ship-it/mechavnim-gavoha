@@ -8,10 +8,11 @@ export async function POST(req: Request) {
     res.cookies.set(PROFILE_COOKIE, "noga", { httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 365, path: "/" });
     return res;
   }
-  if (body.profile === "parent") {
+  if (body.profile === "parent" || body.profile === "tester") {
     if (body.pin !== parentPin()) return NextResponse.json({ ok: false, error: "קוד שגוי" }, { status: 401 });
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(PROFILE_COOKIE, "parent", { httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 30, path: "/" });
+    // tester = אבא בודק את האפליקציה: אותו קוד, אבל שום דבר לא נרשם לנגה
+    res.cookies.set(PROFILE_COOKIE, body.profile, { httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 30, path: "/" });
     return res;
   }
   return NextResponse.json({ ok: false }, { status: 400 });
