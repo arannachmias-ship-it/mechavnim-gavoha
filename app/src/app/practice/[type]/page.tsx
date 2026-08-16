@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { TOPIC_BY_ID, TYPE_TO_TOPIC } from "@/content/topics";
 import { generate } from "@/lib/math/generators";
+import { parenCount } from "@/lib/math/check";
 import { checkLine } from "@/lib/math/engine";
 import type { Exercise, CheckResult } from "@/lib/math/types";
 import { useProgress, logAttempt } from "@/lib/client";
@@ -31,8 +32,9 @@ function mistakeKey(res: CheckResult, ex: Exercise): string {
 export default function PracticePage() {
   const params = useParams<{ type: string }>();
   const typeId = params.type;
-  const topicId = TYPE_TO_TOPIC[typeId];
-  const topic = TOPIC_BY_ID[topicId];
+  const isCustom = typeId === "custom";
+  const topicId = isCustom ? "photo" : TYPE_TO_TOPIC[typeId];
+  const topic = isCustom ? { id: "photo", emoji: "📷", title: "מהצילום", types: [{ id: "custom", title: "תרגיל מהצילום", short: "" }] } : TOPIC_BY_ID[topicId];
   const typeInfo = topic?.types.find((t) => t.id === typeId);
   const router = useRouter();
   const { summary, profile, error, reload } = useProgress();
@@ -67,7 +69,25 @@ export default function PracticePage() {
 
   const newExercise = useCallback(
     (lv: number) => {
-      setEx(generate(typeId, lv));
+      if (isCustom) {
+        // תרגיל שהגיע מצילום – נשמר ב-sessionStorage (בלי פונקציות); משחזרים stageOf גנרי
+        try {
+          const raw = sessionStorage.getItem("mg_custom_ex");
+          if (!raw) {
+            router.replace("/photo");
+            return;
+          }
+          const parsed = JSON.parse(raw) as Exercise;
+          parsed.stageOf = (info) => {
+            const pc = (info.node ? parenCount(info.node) : 0) + (info.lhs ? parenCount(info.lhs) : 0) + (info.rhs ? parenCount(info.rhs) : 0);
+            return pc > 0 ? 0 : Math.min(1, parsed.stages.length - 1);
+          };
+          setEx(parsed);
+        } catch {
+          router.replace("/photo");
+          return;
+        }
+      } else setEx(generate(typeId, lv));
       setHistory([]);
       setResult(null);
       setHintLevel(0);
@@ -83,7 +103,8 @@ export default function PracticePage() {
       fieldRef.current?.clear();
       setTimeout(() => fieldRef.current?.focus(), 100);
     },
-    [typeId]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [typeId, isCustom]
   );
 
   // initial level from progress (or fallback after 1.5s)
@@ -239,7 +260,7 @@ export default function PracticePage() {
 
   return (
     <>
-      <TopBar tester={profile === "tester"} summary={summary} back={`/learn/${topicId}`} title={`🎯 ${typeInfo.title}`} />
+      <TopBar tester={profile === "tester"} summary={summary} back={isCustom ? "/photo" : `/learn/${topicId}`} title={`🎯 ${typeInfo.title}`} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-40 space-y-3">
         <div className="flex items-center gap-2 text-sm">
           <span className="chip bg-slate-100">רמה {"⭐".repeat(level)}</span>
@@ -316,11 +337,17 @@ export default function PracticePage() {
               {ex.kind === "equation" && Array.isArray(ex.solutions) && " – כדאי להציב חזרה במקור ולבדוק."}
             </div>
             <div className="flex gap-2">
-              <button className="btn-primary flex-1 text-lg" onClick={next} autoFocus>
-                עוד תרגיל ←
-              </button>
-              <Link href={`/learn/${topicId}`} className="btn-soft">
-                לנושא
+              {isCustom ? (
+                <Link href="/photo" className="btn-primary flex-1 text-lg text-center" autoFocus>
+                  📷 לצלם עוד ←
+                </Link>
+              ) : (
+                <button className="btn-primary flex-1 text-lg" onClick={next} autoFocus>
+                  עוד תרגיל ←
+                </button>
+              )}
+              <Link href={isCustom ? "/learn" : `/learn/${topicId}`} className="btn-soft">
+                {isCustom ? "למפה" : "לנושא"}
               </Link>
             </div>
           </div>

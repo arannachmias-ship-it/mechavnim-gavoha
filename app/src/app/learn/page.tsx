@@ -47,6 +47,15 @@ export default function LearnHome() {
           </section>
         )}
 
+        <Link href="/photo" className="card border-2 border-violet-200 bg-violet-50 flex items-center gap-3 hover:border-violet-400 transition">
+          <span className="text-4xl">📷</span>
+          <div className="flex-1">
+            <div className="font-bold">יש תרגיל בדף? צלמי אותו</div>
+            <div className="text-sm text-slate-600">ואני אלווה אותך בפתרון – עם הרמזים והשיטה, כמו כאן.</div>
+          </div>
+          <span className="btn-soft">צלמי</span>
+        </Link>
+
         <section className="card border-2 border-amber-300 bg-amber-50">
           <div className="text-sm text-amber-800 font-semibold">הצעד הבא במסלול</div>
           <div className="flex items-center gap-3 mt-1">

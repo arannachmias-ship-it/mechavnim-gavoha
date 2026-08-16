@@ -194,7 +194,7 @@ export default function ParentPage() {
               <div key={r.id} className={`rounded-xl border p-3 ${r.correct ? "border-emerald-200" : "border-red-200 bg-red-50"}`}>
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <span>
-                    {new Date(r.created_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })} · {ALL_TYPES.find((t) => t.id === r.type_id)?.title ?? r.type_id} · רמה {r.level}
+                    {new Date(r.created_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })} · {r.type_id === "custom" ? "📷 מהצילום" : (ALL_TYPES.find((t) => t.id === r.type_id)?.title ?? r.type_id)} · רמה {r.level}
                   </span>
                   <span>
                     {r.skipped ? "🚪 דילגה" : r.correct ? "✔" : "✘"} · {r.duration_sec}s{typeof r.first_input_sec === "number" ? ` · 🤔${r.first_input_sec}s` : ""} · 💡{r.hints} · 👀{r.reveals} · ✘{r.wrong_lines}

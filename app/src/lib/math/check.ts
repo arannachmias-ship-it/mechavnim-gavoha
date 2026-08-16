@@ -13,6 +13,7 @@ export function normalizeInput(raw: string): string {
     .replace(/[−–—]/g, "-")
     .replace(/[·×⋅]/g, "*")
     .replace(/÷/g, "/")
+    .replace(/(?<=[\d)a-zA-Z}])\s*:\s*(?=[\d(a-zA-Z\\])/g, "/") // 12:3 → 12/3 (סימון חילוק ישראלי)
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
     .replace(/√/g, "sqrt")
@@ -255,8 +256,13 @@ export function solutionSet(eq: string, v = "x"): SolutionSet {
     const numCoeffs = r.coefficients;
     if (!numCoeffs || !numCoeffs.length) {
       // rationalize returns no coefficients when the difference is identically 0
-      const val = evalAt(node, { [varName]: 1.234 });
-      return val !== null && Math.abs(val) < 1e-9 ? { kind: "all" } : { kind: "unknown" };
+      // ...or when the variable cancels out entirely (a nonzero constant → no solution)
+      const v1 = evalAt(node, { [varName]: 1.234 }),
+        v2 = evalAt(node, { [varName]: -0.77 });
+      if (v1 === null || v2 === null) return { kind: "unknown" };
+      if (Math.abs(v1) < 1e-9 && Math.abs(v2) < 1e-9) return { kind: "all" };
+      if (Math.abs(v1 - v2) < 1e-9) return { kind: "none" };
+      return { kind: "unknown" };
     }
     let excluded: number[] = [];
     if (r.denominator) {
