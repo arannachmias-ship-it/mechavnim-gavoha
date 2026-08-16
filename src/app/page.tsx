@@ -22,7 +22,7 @@ export default function Home() {
     <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8 bg-gradient-to-b from-amber-50 to-white">
       <div className="text-center">
         <div className="text-6xl mb-2">🚀</div>
-        <h1 className="text-3xl font-black">זינוק לבגרות</h1>
+        <h1 className="text-3xl font-black">מכוונים גבוה</h1>
         <p className="text-slate-600 mt-1">מתמטיקה בשיטה של אבא – חתולים, מגנטים וגולאג</p>
       </div>
       <div className="grid gap-4 w-full max-w-sm">

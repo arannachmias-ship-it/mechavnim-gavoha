@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 export type Profile = "noga" | "parent";
-export const PROFILE_COOKIE = "znk_profile";
+export const PROFILE_COOKIE = "mg_profile";
 
 export async function getProfile(): Promise<Profile | null> {
   const c = await cookies();

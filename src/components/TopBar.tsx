@@ -13,7 +13,7 @@ export default function TopBar({ summary, back, title }: { summary: Summary | nu
         ) : (
           <span className="text-2xl">🚀</span>
         )}
-        <div className="flex-1 font-bold truncate">{title ?? "זינוק לבגרות"}</div>
+        <div className="flex-1 font-bold truncate">{title ?? "מכוונים גבוה"}</div>
         {summary && (
           <div className="flex items-center gap-2 text-sm">
             <span className="chip bg-amber-100 text-amber-800" title="נקודות">

@@ -31,7 +31,7 @@ async function setup() {
     const kb = (window as unknown as { mathVirtualKeyboard: { layouts: unknown } }).mathVirtualKeyboard;
     kb.layouts = [
       {
-        label: "זינוק",
+        label: "מקלדת",
         displayEditToolbar: false,
         rows: [
           [

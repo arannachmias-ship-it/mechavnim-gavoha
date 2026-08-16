@@ -545,7 +545,7 @@ export const ALL_TYPES = TOPICS.flatMap((t) => t.types.map((ty) => ({ ...ty, top
 export const RECOMMENDED_PATH = ["order_ops", "families", "parens", "common_factor", "short_mult", "linear_eq", "linear_eq_frac", "factoring", "quadratic_eq", "systems"];
 
 export const BADGES: { id: string; title: string; emoji: string; desc: string }[] = [
-  { id: "first", title: "זינוק ראשון", emoji: "🚀", desc: "פתרת את התרגיל הראשון" },
+  { id: "first", title: "הצעד הראשון", emoji: "🚀", desc: "פתרת את התרגיל הראשון" },
   { id: "cats10", title: "מאלפת חתולים", emoji: "🐱", desc: "10 תרגילי איחוד משפחות" },
   { id: "kiss10", title: "הבחור עם המגנטים", emoji: "🧲", desc: "10 תרגילי סוגריים" },
   { id: "vaad10", title: "ועד הבית", emoji: "🏢", desc: "10 תרגילי גורם משותף" },

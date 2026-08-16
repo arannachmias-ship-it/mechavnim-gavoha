@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "זינוק לבגרות – נגה",
+  title: "מכוונים גבוה – נגה",
   description: "תרגול מתמטיקה בשיטה של אבא",
   manifest: "/manifest.json",
 };
