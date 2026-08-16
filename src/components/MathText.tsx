@@ -1,5 +1,6 @@
 "use client";
 import katex from "katex";
+import { isolateMath } from "@/lib/bidi";
 import { useMemo } from "react";
 
 /** Render a LaTeX string as display math */
@@ -34,8 +35,13 @@ export function RichText({ text, className = "" }: { text: string; className?: s
   return (
     <span className={className}>
       {parts.map((p, i) =>
-        p.t === "math" ? <Math key={i} latex={p.v} /> : p.t === "bold" ? <b key={i} className="text-amber-700">{p.v}</b> : <span key={i}>{p.v}</span>
+        p.t === "math" ? <Math key={i} latex={p.v} /> : p.t === "bold" ? <b key={i} className="text-amber-700">{isolateMath(p.v)}</b> : <span key={i}>{isolateMath(p.v)}</span>
       )}
     </span>
   );
+}
+
+/** Plain Hebrew string that may contain inline (non-LaTeX) math — bidi-safe. */
+export function Txt({ s }: { s: string }) {
+  return <>{isolateMath(s)}</>;
 }

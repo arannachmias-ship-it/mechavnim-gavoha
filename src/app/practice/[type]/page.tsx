@@ -9,7 +9,7 @@ import type { Exercise, CheckResult } from "@/lib/math/types";
 import { useProgress, logAttempt } from "@/lib/client";
 import { xpFor } from "@/lib/progress";
 import TopBar from "@/components/TopBar";
-import { Math as M, RichText } from "@/components/MathText";
+import { Math as M, RichText, Txt } from "@/components/MathText";
 import MathField, { type MathFieldHandle } from "@/components/MathField";
 
 const PRAISE = ["יפה!", "מעולה!", "בול!", "ככה בדיוק!", "וואו, מהר!", "אלופה!", "סטאלין היה גאה 😄", "הבחור עם המגנטים מרוצה 🧲", "חתולים מאוחדים 🐱"];
@@ -224,12 +224,12 @@ export default function PracticePage() {
         <div className="flex items-center gap-2 text-sm">
           <span className="chip bg-slate-100">רמה {"⭐".repeat(level)}</span>
           <span className="chip bg-slate-100">היום בסשן: {sessionCount}</span>
-          {stageInfo && !done && <span className="chip bg-amber-100 text-amber-800 truncate">שלב: {stageInfo.name}</span>}
+          {stageInfo && !done && <span className="chip bg-amber-100 text-amber-800 truncate">שלב: <Txt s={stageInfo.name} /></span>}
         </div>
 
         {ex && (
           <div className={`card border-2 ${done ? "border-emerald-300 bg-emerald-50" : "border-amber-200"}`}>
-            <div className="text-slate-600 text-sm mb-1">{ex.instruction}</div>
+            <div className="text-slate-600 text-sm mb-1"><Txt s={ex.instruction} /></div>
             <div className="text-2xl sm:text-3xl py-2">
               <M latex={ex.promptLatex} block />
             </div>
@@ -253,7 +253,7 @@ export default function PracticePage() {
         {/* feedback */}
         {result && !done && (
           <div key={shake} className={`rounded-xl p-3 text-sm leading-relaxed ${result.status === "ok" ? "bg-emerald-50 text-emerald-800" : result.status === "wrong" || result.status === "unparsable" ? "bg-red-50 text-red-800 animate-shake" : "bg-slate-50 text-slate-700"}`}>
-            {result.status === "ok" && !result.message.startsWith("👀") ? `✔ ${PRAISE[(history.length * 7 + sessionCount) % PRAISE.length]} ${result.message}` : result.message}
+            <Txt s={result.status === "ok" && !result.message.startsWith("👀") ? `✔ ${PRAISE[(history.length * 7 + sessionCount) % PRAISE.length]} ${result.message}` : result.message} />
           </div>
         )}
 
@@ -262,7 +262,7 @@ export default function PracticePage() {
           <div className="space-y-2">
             {hintLevel >= 1 && stageInfo && (
               <div className="rounded-xl p-3 bg-sky-50 text-sky-900 animate-pop">
-                💡 <b>{stageInfo.name}:</b> <RichText text={stageInfo.hint1} />
+                💡 <b><Txt s={stageInfo.name} />:</b> <RichText text={stageInfo.hint1} />
               </div>
             )}
             {hintLevel >= 2 && stageInfo && (

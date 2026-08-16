@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { TOPIC_BY_ID } from "@/content/topics";
 import { useProgress } from "@/lib/client";
 import TopBar from "@/components/TopBar";
-import { Math as M, RichText } from "@/components/MathText";
+import { Math as M, RichText, Txt } from "@/components/MathText";
 import Animation from "@/components/Animation";
 
 export default function TopicPage() {
@@ -24,7 +24,7 @@ export default function TopicPage() {
     <>
       <TopBar summary={summary} back="/learn" title={`${topic.emoji} ${topic.title}`} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-24 space-y-4">
-        <p className="text-slate-600">{topic.subtitle}</p>
+        <p className="text-slate-600"><Txt s={topic.subtitle} /></p>
 
         <div className="flex gap-2 sticky top-[52px] z-10 bg-[var(--background)] py-1">
           {(
@@ -45,7 +45,7 @@ export default function TopicPage() {
             {topic.animation && <Animation id={topic.animation} />}
             {topic.cards.map((c, i) => (
               <div key={i} className="card">
-                <h3 className="font-bold text-lg mb-2">{c.title}</h3>
+                <h3 className="font-bold text-lg mb-2"><Txt s={c.title} /></h3>
                 <div className="space-y-2 leading-relaxed">
                   {c.body.map((p, j) => (
                     <p key={j}>
@@ -109,9 +109,9 @@ export default function TopicPage() {
               const tp = summary?.types[ty.id];
               return (
                 <Link key={ty.id} href={`/practice/${ty.id}`} className="btn-primary flex-1 whitespace-nowrap flex-col gap-0 py-2">
-                  <span>🎯 תרגול: {ty.title}</span>
+                  <span>🎯 תרגול: <Txt s={ty.title} /></span>
                   <span className="text-xs font-normal opacity-90">
-                    {ty.short}
+                    <Txt s={ty.short} />
                     {tp && tp.attempts > 0 ? ` · ${"★".repeat(tp.stars)}` : ""}
                   </span>
                 </Link>

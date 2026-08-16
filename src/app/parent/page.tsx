@@ -5,7 +5,7 @@ import { TOPICS, ALL_TYPES } from "@/content/topics";
 import { MISTAKE_LABELS } from "@/lib/progress";
 import { useProgress } from "@/lib/client";
 import TopBar from "@/components/TopBar";
-import { Math as M } from "@/components/MathText";
+import { Math as M, Txt } from "@/components/MathText";
 
 const heat = (m: number, attempts: number) => {
   if (!attempts) return "bg-slate-100 text-slate-400";
@@ -56,7 +56,7 @@ export default function ParentPage() {
                     const tp = summary.types[ty.id];
                     return (
                       <div key={ty.id} className={`flex-1 rounded-lg px-2 py-1 text-xs text-center ${heat(tp?.mastery ?? 0, tp?.attempts ?? 0)}`} title={`${ty.title}: ${tp?.correct ?? 0}/${tp?.attempts ?? 0}, רמזים ${tp?.hints ?? 0}, הצגות ${tp?.reveals ?? 0}`}>
-                        {ty.title}
+                        <Txt s={ty.title} />
                         <div className="opacity-80">
                           {tp?.attempts ? `${Math.round((tp.mastery ?? 0) * 100)}% · ${"★".repeat(tp.stars)}` : "—"}
                         </div>
@@ -108,7 +108,7 @@ export default function ParentPage() {
                 const tp = summary.types[t.id];
                 return (
                   <li key={t.id} className="flex justify-between gap-2">
-                    <span className="truncate">{t.title}</span>
+                    <span className="truncate"><Txt s={t.title} /></span>
                     <span className="text-slate-600 whitespace-nowrap">
                       💡 {tp.hints} · 👀 {tp.reveals} · {tp.attempts} תרגילים
                     </span>

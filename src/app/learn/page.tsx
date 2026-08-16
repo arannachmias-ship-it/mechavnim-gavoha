@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { TOPICS, RECOMMENDED_PATH, BADGES } from "@/content/topics";
 import { useProgress } from "@/lib/client";
 import TopBar from "@/components/TopBar";
+import { Txt } from "@/components/MathText";
 
 function Stars({ n }: { n: number }) {
   return (
@@ -52,7 +53,7 @@ export default function LearnHome() {
             <span className="text-4xl">{nextTopic.emoji}</span>
             <div className="flex-1">
               <div className="font-bold text-lg">{nextTopic.title}</div>
-              <div className="text-sm text-slate-600">{nextTopic.subtitle}</div>
+              <div className="text-sm text-slate-600"><Txt s={nextTopic.subtitle} /></div>
             </div>
             <Link href={`/learn/${nextTopic.id}`} className="btn-primary">
               יאללה
@@ -73,7 +74,7 @@ export default function LearnHome() {
                       <span className="text-slate-400 text-sm ml-1">{i + 1}.</span>
                       {t.title}
                     </div>
-                    <div className="text-xs text-slate-600 truncate">{t.subtitle}</div>
+                    <div className="text-xs text-slate-600 truncate"><Txt s={t.subtitle} /></div>
                     <div className="mt-1 flex items-center gap-2">
                       <Stars n={p?.stars ?? 0} />
                       {p && p.attempts > 0 && <span className="text-xs text-slate-500">{p.correct}/{p.attempts} ✔</span>}
