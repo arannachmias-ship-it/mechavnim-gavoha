@@ -101,15 +101,57 @@ export const ANIMATIONS: Record<string, { title: string; frames: Frame[] }> = {
   },
 };
 
+/** כמה זמן להשאיר פריים על המסך – לפי אורך הטקסט (זמן קריאה), לא זמן קבוע */
+function frameMs(f: Frame, slow: boolean): number {
+  const text = f.caption.replace(/\$[^$]*\$/g, (m) => m.repeat(2)); // נוסחה בתוך הטקסט לוקחת יותר זמן להבין
+  const chars = text.length + f.latex.replace(/\\[a-zA-Z]+|[{}]/g, "").length * 0.8;
+  const ms = 2600 + chars * 75; // ~13 תווים לשנייה + זמן להביט בנוסחה
+  return Math.round(Math.min(14000, Math.max(4200, ms)) * (slow ? 1.5 : 1));
+}
+
 export default function Animation({ id }: { id: string }) {
   const anim = ANIMATIONS[id];
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
-    if (!playing || !anim) return;
-    const t = setTimeout(() => setI((k) => (k + 1 < anim.frames.length ? k + 1 : (setPlaying(false), k))), 2600);
-    return () => clearTimeout(t);
-  }, [playing, i, anim]);
+    try {
+      setSlow(localStorage.getItem("mg_anim_slow") === "1");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const dur = anim ? frameMs(anim.frames[Math.min(i, anim.frames.length - 1)], slow) : 0;
+
+  // מתקדם לפריים הבא רק אחרי שהיה מספיק זמן לקרוא; פס התקדמות מראה כמה נשאר
+  useEffect(() => {
+    if (!playing || !anim) {
+      setProgress(0);
+      return;
+    }
+    const start = Date.now();
+    let raf = 0;
+    const tick = () => {
+      const pct = Math.min(1, (Date.now() - start) / dur);
+      setProgress(pct);
+      if (pct < 1) raf = requestAnimationFrame(tick);
+      else if (i + 1 < anim.frames.length) setI(i + 1);
+      else setPlaying(false);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, i, anim, dur]);
+
+  /** קדימה – ממשיך לנגן (אם היא רוצה להאיץ); אחורה – עוצר כדי לתת לה לקרוא שוב */
+  const next = (k: number) => setI(k);
+  const back = (k: number) => {
+    setPlaying(false);
+    setI(k);
+  };
+
   if (!anim) return null;
   const f = anim.frames[i];
   return (
@@ -131,15 +173,42 @@ export default function Animation({ id }: { id: string }) {
           <RichText text={f.caption} />
         </p>
       </div>
-      <div className="flex gap-2 mt-3">
-        <button className="btn-soft" onClick={() => setI((k) => Math.max(0, k - 1))} disabled={i === 0}>
+      {playing && (
+        <div className="h-1.5 rounded-full bg-amber-100 mt-3 overflow-hidden" aria-hidden>
+          <div className="h-full bg-amber-400 transition-[width] duration-100 ease-linear" style={{ width: `${Math.round(progress * 100)}%` }} />
+        </div>
+      )}
+      <div className="flex gap-2 mt-3 flex-wrap items-center">
+        <button className="btn-soft" onClick={() => back(Math.max(0, i - 1))} disabled={i === 0}>
           → הקודם
         </button>
-        <button className="btn-primary" onClick={() => (i + 1 < anim.frames.length ? setI(i + 1) : setI(0))}>
+        <button className="btn-primary" onClick={() => next(i + 1 < anim.frames.length ? i + 1 : 0)}>
           {i + 1 < anim.frames.length ? "הבא ←" : "מהתחלה ↺"}
         </button>
-        <button className="btn-ghost" onClick={() => setPlaying((p) => !p)}>
-          {playing ? "⏸ עצור" : "▶ נגן"}
+        <button
+          className="btn-ghost"
+          onClick={() => {
+            if (playing) return setPlaying(false);
+            if (i === anim.frames.length - 1) setI(0);
+            setPlaying(true);
+          }}
+        >
+          {playing ? "⏸ עצור" : i === anim.frames.length - 1 ? "▶ נגן מהתחלה" : "▶ נגן"}
+        </button>
+        <button
+          className={`text-sm mr-auto rounded-lg px-2 py-1 ${slow ? "bg-amber-100 text-amber-800 font-semibold" : "text-slate-500"}`}
+          title="להשאיר כל שלב יותר זמן על המסך"
+          onClick={() => {
+            const v = !slow;
+            setSlow(v);
+            try {
+              localStorage.setItem("mg_anim_slow", v ? "1" : "0");
+            } catch {
+              /* ignore */
+            }
+          }}
+        >
+          🐢 לאט יותר
         </button>
       </div>
     </div>
