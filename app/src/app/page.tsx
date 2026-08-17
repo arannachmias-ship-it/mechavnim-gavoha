@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import InstallHint from "@/components/InstallHint";
 
 export default function Home() {
   const router = useRouter();
@@ -74,6 +75,7 @@ export default function Home() {
             <div className="text-xs text-slate-500">"לבדוק את האפליקציה" נכנס למסכים של נגה עם הקוד שלך – ושום תרגיל לא נרשם לה.</div>
           </form>
         )}
+        <InstallHint />
       </div>
     </main>
   );
