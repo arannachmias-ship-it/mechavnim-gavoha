@@ -71,7 +71,17 @@ export default function PhotoPage() {
 
   function practice(it: Item) {
     if (!it.exercise) return;
-    sessionStorage.setItem("mg_custom_ex", JSON.stringify(it.exercise));
+    const raw = JSON.stringify(it.exercise);
+    try {
+      localStorage.setItem("mg_custom_ex", raw);
+    } catch {
+      /* ignore */
+    }
+    try {
+      sessionStorage.setItem("mg_custom_ex", raw);
+    } catch {
+      /* ignore */
+    }
     router.push("/practice/custom");
   }
 

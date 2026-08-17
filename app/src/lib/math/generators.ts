@@ -1,10 +1,10 @@
 import type { MathNode } from "mathjs";
-import { Poly, polyLatex, polyPlain, parenIfNeeded, rint, rnz, pick, shuffle, frac, F, gcd, fracLatex } from "./poly";
+import { Poly, polyLatex, polyPlain, parenIfNeeded, rint, rnz, pick, shuffle, frac, F, gcd, fracLatex, rnd, withSeed, newSeed } from "./poly";
 import { parenCount, hasDivision, nodeVars, nodeCount, parseExpr } from "./check";
 import type { Exercise, StageInfo, Step, Trap } from "./types";
 
 let counter = 0;
-const uid = (t: string) => `${t}-${Date.now().toString(36)}-${(counter++).toString(36)}`;
+const uid = (t: string) => `${t}-${(counter++).toString(36)}-${Math.floor(rnd() * 1e6).toString(36)}`;
 
 const L = polyLatex;
 const P = polyPlain;
@@ -519,7 +519,7 @@ export function genLinearEq(level: number): Exercise {
     steps.push(st(left ? `${L(x.scale(la))}${L(x.scale(-ra)).startsWith("-") ? "" : "+"}${L(x.scale(-ra))}=${rb}${lb > 0 ? "-" + lb : "+" + -lb}` : `${lb}${rb > 0 ? "-" + rb : "+" + -rb}=${L(x.scale(ra))}${L(x.scale(-la)).startsWith("-") ? "" : "+"}${L(x.scale(-la))}`, idx + 1, "מר גזען"), st(left ? `${L(x.scale(coef))}=${cst}` : `${cst}=${L(x.scale(coef))}`, idx + 2, "איחוד משפחות"), st(`x=${sol}`, idx + 3, "חילוק במקדם"));
   } else {
     // level 3: parens on both sides, maybe "all"/"none"
-    const special = Math.random() < 0.3 ? pick(["all", "none"] as const) : null;
+    const special = rnd() < 0.3 ? pick(["all", "none"] as const) : null;
     const a = rnz(-5, 5),
       b = rnz(-6, 6),
       c = rnz(-5, 5),
@@ -747,7 +747,7 @@ export function genSystem(level: number): Exercise {
   const e1 = x.scale(a1).add(y.scale(b1)),
     e2 = x.scale(a2).add(y.scale(b2));
   const promptLatex = `\\begin{cases}${L(e1)}=${c1}\\\\${L(e2)}=${c2}\\end{cases}`;
-  const askBoth = level >= 2 || Math.random() < 0.5;
+  const askBoth = level >= 2 || rnd() < 0.5;
   const stages: StageInfo[] = [
     S("סובייטים מסודרים", "לפני הגולאג – מסדרים: x מתחת ל-x, y מתחת ל-y, מספרים מתחת למספרים.", "ודאי ששתי המשוואות מסודרות באותו סדר: ax + by = c."),
     S("סטאלין: יש נעלם – יש בעיה", `אנחנו רוצים את x, אז y הוא הבעיה. איך מחסלים? חיבור או חיסור משוואות. אם המקדמים של y לא שווים – עבודת הכנה: מכפילים משוואה שלמה.`, level === 1 ? "המקדמים של y כבר שווים בגודלם – אפשר לחסל ישר." : "הכפילי משוואה אחת (את כולה! גם הצד הימני) כך שהמקדמים של y יהיו שווים בגודלם."),
@@ -872,7 +872,7 @@ export function genTrinomial(level: number): Exercise {
     const q2 = c > 0 ? `האיבר האמצעי ${b > 0 ? "חיובי" : "שלילי"} – אז שניהם ${b > 0 ? "חיוביים" : "שליליים"}.` : `האיבר האמצעי ${b > 0 ? "חיובי" : "שלילי"} – אז הגדול מביניהם ${b > 0 ? "חיובי" : "שלילי"}.`;
     return `שאלה 1: ${q1} שאלה 2: ${q2}`;
   };
-  if (level === 3 && Math.random() < 0.35) {
+  if (level === 3 && rnd() < 0.35) {
     // difference of squares: k²x² - m²  or x² - m²
     const k = pick([1, 1, 2, 3, 4, 5]),
       m = rint(1, 9);
@@ -899,7 +899,7 @@ export function genTrinomial(level: number): Exercise {
       traps: [],
     };
   }
-  if (level === 3 && Math.random() < 0.5) {
+  if (level === 3 && rnd() < 0.5) {
     // a ≠ 1: (px+q)(rx+s) – ועד בית פעמיים
     const pr = pick([
       [2, 1],
@@ -961,7 +961,7 @@ export function genTrinomial(level: number): Exercise {
   }
   const p = level === 1 ? rint(1, 9) : rnz(-9, 9),
     q = level === 1 ? rint(1, 9) : rnz(-9, 9);
-  if (p === q && level > 1 && Math.random() < 0.7) return genTrinomial(level);
+  if (p === q && level > 1 && rnd() < 0.7) return genTrinomial(level);
   const f1 = x.add(Poly.const(p)),
     f2 = x.add(Poly.const(q));
   const total = f1.mul(f2);
@@ -1000,7 +1000,7 @@ export function genQuadraticEq(level: number): Exercise {
   let abc: [number, number, number] | undefined;
   const ZERO = "מי גרם לאפס?";
   const zeroHint = "מכפלה שיצאה אפס – מישהו שם גרם לזה. אין דרך אחרת. עוברים גוש-גוש ושואלים מי האשם: כל גוש = 0 בנפרד.";
-  const roll = Math.random();
+  const roll = rnd();
   if (level === 1) {
     // x² + bx = 0  → x(x+b)=0   (never divide by x!)
     const b = rnz(-12, 12);
@@ -1017,7 +1017,7 @@ export function genQuadraticEq(level: number): Exercise {
     const m = rint(1, 12);
     lhs = x.pow(2).sub(Poly.const(m * m));
     roots = [-m, m];
-    promptLatex = Math.random() < 0.5 ? `${L(lhs)}=0` : `x^{2}=${m * m}`;
+    promptLatex = rnd() < 0.5 ? `${L(lhs)}=0` : `x^{2}=${m * m}`;
     stages = [
       S("חזקה זוגית = תמיד ±", "x² = מספר ⇒ חזקה זוגית תמיד מחזירה שני פתרונות – חיובי ושלילי. או: תאומים הפוכים (x+m)(x−m)=0.", `x²=${m * m} ⇒ x=±${m}. או פרקי ל-(x+${m})(x−${m})=0.`),
       S("שני הפתרונות", zeroHint, `x=${m}, x=${-m}. מי ששכח את המינוס – שכח חצי מהתשובה.`),
@@ -1029,7 +1029,7 @@ export function genQuadraticEq(level: number): Exercise {
     if (p === q) return genQuadraticEq(level);
     lhs = x.add(Poly.const(p)).mul(x.add(Poly.const(q)));
     roots = [-p, -q];
-    const shift = level === 3 || Math.random() < 0.4 ? rnz(-9, 9) : 0;
+    const shift = level === 3 || rnd() < 0.4 ? rnz(-9, 9) : 0;
     promptLatex = shift ? `${L(lhs.add(Poly.const(shift)))}=${shift}` : `${L(lhs)}=0`;
     stages = [
       S("הכול לצד אחד, = 0", "'מי גרם לאפס' עובד רק כשבצד השני יש 0. מר גזען: הכול לצד אחד. ריבועי, קווי, חופשי.", "העבירי הכול לצד שמאל כך שבצד ימין 0."),
@@ -1202,7 +1202,7 @@ export function genAlgFrac(level: number): Exercise {
     traps.push({ plain: `(${k}+${k * a})/(x+${a})`, message: "אסור לצמצם עם חיבור. x למעלה הוא חלק מסכום – לא גוש. קודם ועד בית למעלה ולמטה, ורק גוש שלם מול גוש שלם מתקצר.", mistake: "cancel" });
   } else if (level === 2) {
     // (x+a)(x+b) / (x+a)(x+c) → (x+b)/(x+c) ; or (x²−m²)/(x²+mx)
-    if (Math.random() < 0.5) {
+    if (rnd() < 0.5) {
       const m = rint(2, 9);
       num = x.pow(2).sub(Poly.const(m * m));
       den = x.pow(2).add(x.scale(m));
@@ -1232,7 +1232,7 @@ export function genAlgFrac(level: number): Exercise {
     const a = rint(2, 8),
       b = rnz(-8, 8);
     if (b === a || b === -a) return genAlgFrac(level);
-    const flip = Math.random() < 0.4; // (a² − x²) → חיסור הפוך
+    const flip = rnd() < 0.4; // (a² − x²) → חיסור הפוך
     num = x.add(Poly.const(a)).mul(x.add(Poly.const(b)));
     den = flip ? Poly.const(a * a).sub(x.pow(2)) : x.pow(2).sub(Poly.const(a * a));
     numF = `\\left(x+${a}\\right)\\left(${L(x.add(Poly.const(b)))}\\right)`;
@@ -1288,18 +1288,31 @@ export const GENERATORS: Record<string, (level: number) => Exercise> = {
   alg_frac: genAlgFrac,
 };
 
-export function generate(typeId: string, level: number): Exercise {
+/**
+ * בונה תרגיל. אם מעבירים `seed` – התרגיל ייבנה בדיוק אותו דבר בכל פעם,
+ * וכך אפשר לשחזר תרגיל שנקטע באמצע (נגה יצאה לוואטסאפ והדף נסגר).
+ */
+export function generate(typeId: string, level: number, seed?: number): Exercise {
   const g = GENERATORS[typeId];
   if (!g) throw new Error("unknown type " + typeId);
-  for (let i = 0; i < 20; i++) {
-    try {
-      const ex = g(Math.min(3, Math.max(1, level)));
-      // sanity: original parses
-      if ((ex.kind === "expr" || ex.kind === "fracdomain") && !parseExpr(ex.originalPlain!)) continue;
-      return ex;
-    } catch {
-      /* retry */
+  const build = () => {
+    for (let i = 0; i < 20; i++) {
+      try {
+        const ex = g(Math.min(3, Math.max(1, level)));
+        // sanity: original parses
+        if ((ex.kind === "expr" || ex.kind === "fracdomain") && !parseExpr(ex.originalPlain!)) continue;
+        return ex;
+      } catch {
+        /* retry */
+      }
     }
-  }
-  return g(1);
+    return g(1);
+  };
+  return seed === undefined ? build() : withSeed(seed, build);
+}
+
+/** תרגיל חדש + הזרע שממנו נבנה (כדי שנוכל לשחזר אותו אחר כך) */
+export function generateWithSeed(typeId: string, level: number): { ex: Exercise; seed: number } {
+  const seed = newSeed();
+  return { ex: generate(typeId, level, seed), seed };
 }

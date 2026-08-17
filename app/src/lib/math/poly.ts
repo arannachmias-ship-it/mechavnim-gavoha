@@ -306,9 +306,36 @@ export function parenIfNeeded(p: Poly): string {
   return s;
 }
 
-/* ---------- random helpers ---------- */
+/* ---------- random helpers ----------
+   כל ההגרלות עוברות דרך rnd(). כשמגרילים עם "זרע" (seed) אותו תרגיל ייבנה שוב
+   בדיוק אותו דבר – כך אפשר לחזור לתרגיל שנגה עצרה באמצע גם אחרי שהדף נסגר. */
+let seedState: number | null = null;
+
+/** מגריל 0..1 – Math.random רגיל, או PRNG דטרמיניסטי כשיש זרע */
+export function rnd(): number {
+  if (seedState === null) return Math.random();
+  seedState = (seedState + 0x6d2b79f5) >>> 0;
+  let t = seedState;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+/** מריץ פונקציה עם זרע קבוע (ומחזיר את המגריל למצב רגיל בסוף) */
+export function withSeed<T>(seed: number, fn: () => T): T {
+  const prev = seedState;
+  seedState = (seed >>> 0) || 1;
+  try {
+    return fn();
+  } finally {
+    seedState = prev;
+  }
+}
+export function newSeed(): number {
+  return (Math.floor(Math.random() * 0xffffffff) >>> 0) || 1;
+}
+
 export function rint(a: number, b: number) {
-  return a + Math.floor(Math.random() * (b - a + 1));
+  return a + Math.floor(rnd() * (b - a + 1));
 }
 export function rnz(a: number, b: number) {
   let v = 0;
@@ -316,12 +343,12 @@ export function rnz(a: number, b: number) {
   return v;
 }
 export function pick<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[Math.floor(rnd() * arr.length)];
 }
 export function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rnd() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;

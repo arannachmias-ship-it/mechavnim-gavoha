@@ -3,7 +3,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { TOPIC_BY_ID, TYPE_TO_TOPIC } from "@/content/topics";
-import { generate } from "@/lib/math/generators";
+import { generate, generateWithSeed } from "@/lib/math/generators";
 import { parenCount } from "@/lib/math/check";
 import { checkLine } from "@/lib/math/engine";
 import type { Exercise, CheckResult } from "@/lib/math/types";
@@ -14,6 +14,16 @@ import { Math as M, RichText, Txt } from "@/components/MathText";
 import MathField, { type MathFieldHandle } from "@/components/MathField";
 import FormulaSheet from "@/components/FormulaSheet";
 import { PRAISE_NORMAL, PRAISE_HARD, PRAISE_MILESTONE, AFTER_STRUGGLE, Rotator, sessionSummary } from "@/content/voice";
+import { saveResume, loadResume, clearResume, SESSION_MAX_AGE_MS, type ResumeState } from "@/lib/resume";
+
+/** התרגיל שהגיע מצילום נשמר ב-localStorage (שורד סגירת דף), עם נפילה ל-sessionStorage מגרסאות קודמות */
+function readCustomEx(): string | null {
+  try {
+    return localStorage.getItem("mg_custom_ex") ?? sessionStorage.getItem("mg_custom_ex");
+  } catch {
+    return null;
+  }
+}
 
 function mistakeKey(res: CheckResult, ex: Exercise): string {
   if (res.mistake) return res.mistake;
@@ -54,8 +64,13 @@ export default function PracticePage() {
   const [cleanRun, setCleanRun] = useState(0);
   const [shake, setShake] = useState(0);
   const [showFinal, setShowFinal] = useState(false);
-  const startRef = useRef<number>(Date.now());
+  /** זמן פעיל בתרגיל – לא סופרים את הדקות שהיא בוואטסאפ / האפליקציה ברקע */
+  const timeRef = useRef({ acc: 0, since: Date.now(), hidden: false });
+  /** שניות עד ההקלדה הראשונה (מתוך הזמן הפעיל) */
   const firstInputRef = useRef<number | null>(null);
+  const seedRef = useRef<number | undefined>(undefined);
+  const customRawRef = useRef<string | null>(null);
+  const [resumed, setResumed] = useState(false);
   const fieldRef = useRef<MathFieldHandle>(null);
   const levelInit = useRef(false);
   const rot = useRef(new Rotator());
@@ -67,27 +82,83 @@ export default function PracticePage() {
     if (error === "unauth") router.replace("/");
   }, [error, router]);
 
+  const activeMs = useCallback(() => {
+    const t = timeRef.current;
+    return t.acc + (t.hidden ? 0 : Date.now() - t.since);
+  }, []);
+  const resetTime = useCallback((acc = 0) => {
+    timeRef.current = { acc, since: Date.now(), hidden: typeof document !== "undefined" ? document.hidden : false };
+  }, []);
+
+  const reviveCustom = useCallback((raw: string): Exercise => {
+    const parsed = JSON.parse(raw) as Exercise;
+    parsed.stageOf = (info) => {
+      const pc = (info.node ? parenCount(info.node) : 0) + (info.lhs ? parenCount(info.lhs) : 0) + (info.rhs ? parenCount(info.rhs) : 0);
+      return pc > 0 ? 0 : Math.min(1, parsed.stages.length - 1);
+    };
+    return parsed;
+  }, []);
+
+  /** תרגיל חדש, או שחזור של תרגיל שנקטע (restore) */
   const newExercise = useCallback(
-    (lv: number) => {
+    (lv: number, restore?: ResumeState) => {
+      let exercise: Exercise;
       if (isCustom) {
-        // תרגיל שהגיע מצילום – נשמר ב-sessionStorage (בלי פונקציות); משחזרים stageOf גנרי
+        const raw = restore?.customEx ?? readCustomEx();
+        if (!raw) {
+          router.replace("/photo");
+          return;
+        }
         try {
-          const raw = sessionStorage.getItem("mg_custom_ex");
-          if (!raw) {
-            router.replace("/photo");
-            return;
-          }
-          const parsed = JSON.parse(raw) as Exercise;
-          parsed.stageOf = (info) => {
-            const pc = (info.node ? parenCount(info.node) : 0) + (info.lhs ? parenCount(info.lhs) : 0) + (info.rhs ? parenCount(info.rhs) : 0);
-            return pc > 0 ? 0 : Math.min(1, parsed.stages.length - 1);
-          };
-          setEx(parsed);
+          exercise = reviveCustom(raw);
         } catch {
           router.replace("/photo");
           return;
         }
-      } else setEx(generate(typeId, lv));
+        customRawRef.current = raw;
+        seedRef.current = undefined;
+      } else if (restore && restore.seed !== undefined) {
+        exercise = generate(typeId, restore.level, restore.seed);
+        seedRef.current = restore.seed;
+      } else {
+        const g = generateWithSeed(typeId, lv);
+        exercise = g.ex;
+        seedRef.current = g.seed;
+      }
+
+      if (restore) {
+        // האם השורה האחרונה שכבר אושרה סיימה את התרגיל? אם כן – מתחילים תרגיל חדש
+        let last: CheckResult | null = null;
+        if (restore.history.length) {
+          try {
+            last = checkLine(exercise, restore.history.slice(0, -1), restore.history[restore.history.length - 1]);
+          } catch {
+            last = null;
+          }
+          if (last?.status === "done") restore = undefined;
+        }
+        if (restore) {
+          setEx(exercise);
+          setHistory(restore.history);
+          setResult(last);
+          setHintLevel(restore.hintLevel);
+          setHintsUsed(restore.hintsUsed);
+          setReveals(restore.reveals);
+          setWrongCount(restore.wrongCount);
+          setMistakes(restore.mistakes);
+          setDone(false);
+          setShowFinal(false);
+          setPraise(null);
+          firstInputRef.current = restore.firstInputSec;
+          resetTime(restore.activeMs);
+          setResumed(true);
+          if (restore.draft) setTimeout(() => fieldRef.current?.setValue(restore!.draft), 80);
+          setTimeout(() => fieldRef.current?.focus(), 140);
+          return;
+        }
+      }
+
+      setEx(exercise);
       setHistory([]);
       setResult(null);
       setHintLevel(0);
@@ -98,13 +169,35 @@ export default function PracticePage() {
       setDone(false);
       setShowFinal(false);
       setPraise(null);
-      startRef.current = Date.now();
+      setResumed(false);
       firstInputRef.current = null;
+      resetTime(0);
       fieldRef.current?.clear();
       setTimeout(() => fieldRef.current?.focus(), 100);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [typeId, isCustom]
+    [typeId, isCustom, reviveCustom, resetTime]
+  );
+
+  /** מתחילים: אם יש תרגיל שנקטע – ממשיכים ממנו; אחרת תרגיל חדש ברמה המתאימה */
+  const start = useCallback(
+    (fallbackLevel: number) => {
+      const rec = loadResume(typeId);
+      const freshSession = rec ? Date.now() - rec.savedAt <= SESSION_MAX_AGE_MS : false;
+      if (rec && freshSession) {
+        setSessionCount(rec.sessionCount);
+        setSessionWrong(rec.sessionWrong);
+        setCleanRun(rec.cleanRun);
+      }
+      if (rec && !rec.finished && (rec.history.length || rec.draft || rec.hintsUsed || rec.wrongCount)) {
+        setLevel(rec.level);
+        newExercise(rec.level, rec);
+        return;
+      }
+      setLevel(fallbackLevel);
+      newExercise(fallbackLevel);
+    },
+    [typeId, newExercise]
   );
 
   // initial level from progress (or fallback after 1.5s)
@@ -114,18 +207,98 @@ export default function PracticePage() {
     const tp = summary.types[typeId];
     let lv = tp?.lastLevel ?? 1;
     if (tp && tp.mastery > 0.8 && lv < 3) lv++;
-    setLevel(lv);
-    newExercise(lv);
-  }, [summary, typeId, newExercise]);
+    start(lv);
+  }, [summary, typeId, start]);
   useEffect(() => {
     const t = setTimeout(() => {
       if (!levelInit.current) {
         levelInit.current = true;
-        newExercise(1);
+        start(1);
       }
     }, 1500);
     return () => clearTimeout(t);
-  }, [newExercise]);
+  }, [start]);
+
+  /* ---------- שמירת מקום: ממשיכים בדיוק מאיפה שעצרנו ---------- */
+  const draftDirty = useRef(false);
+  const persistRef = useRef<() => void>(() => {});
+  const persist = useCallback(() => {
+    if (!ex) return;
+    let draft = "";
+    try {
+      draft = fieldRef.current?.getValue() ?? "";
+    } catch {
+      draft = "";
+    }
+    saveResume({
+      typeId,
+      topicId: ex.topicId,
+      title: typeInfo?.title,
+      level,
+      seed: seedRef.current,
+      customEx: isCustom ? customRawRef.current ?? undefined : undefined,
+      promptLatex: ex.promptLatex,
+      history,
+      draft,
+      hintLevel,
+      hintsUsed,
+      reveals,
+      wrongCount,
+      mistakes,
+      activeMs: activeMs(),
+      firstInputSec: firstInputRef.current,
+      sessionCount,
+      sessionWrong,
+      cleanRun,
+      finished: done,
+    });
+  }, [ex, typeId, typeInfo, level, isCustom, history, hintLevel, hintsUsed, reveals, wrongCount, mistakes, sessionCount, sessionWrong, cleanRun, done, activeMs]);
+  persistRef.current = persist;
+  useEffect(() => {
+    persist();
+  }, [persist]);
+
+  // עצירת מד-הזמן ושמירה כשהאפליקציה עוברת לרקע (יציאה לוואטסאפ, סגירת מסך)
+  useEffect(() => {
+    const pause = () => {
+      const t = timeRef.current;
+      if (!t.hidden) {
+        t.acc += Date.now() - t.since;
+        t.hidden = true;
+      }
+    };
+    const resume = () => {
+      const t = timeRef.current;
+      if (t.hidden) {
+        t.since = Date.now();
+        t.hidden = false;
+      }
+    };
+    const onVis = () => {
+      if (document.hidden) {
+        pause();
+        persistRef.current();
+      } else resume();
+    };
+    const onHide = () => {
+      pause();
+      persistRef.current();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", onHide);
+    // גם תוך כדי הקלדה – כדי שהשורה שהיא באמצע כתיבתה לא תיעלם
+    const iv = setInterval(() => {
+      if (draftDirty.current) {
+        draftDirty.current = false;
+        persistRef.current();
+      }
+    }, 4000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", onHide);
+      clearInterval(iv);
+    };
+  }, []);
 
   const currentStage = useMemo(() => {
     if (!ex) return 0;
@@ -137,7 +310,7 @@ export default function PracticePage() {
   const stageInfo = ex?.stages[Math.min(currentStage, ex.stages.length - 1)];
 
   function finish(exercise: Exercise, hist: string[], extraReveal = 0) {
-    const dur = Math.round((Date.now() - startRef.current) / 1000);
+    const dur = Math.round(activeMs() / 1000);
     const rev = reveals + extraReveal;
     const correct = true;
     const gain = xpFor({ correct, hints: hintsUsed, reveals: rev, level: exercise.level });
@@ -158,7 +331,7 @@ export default function PracticePage() {
     else setPraise({ head: rot.current.pick("n", PRAISE_NORMAL), tier: "normal" });
     if ((sessionCount + 1) % 8 === 0) setShowSummary(true);
     logAttempt({
-      first_input_sec: firstInputRef.current === null ? null : Math.min(3600, Math.round((firstInputRef.current - startRef.current) / 1000)),
+      first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current),
       skipped: false,
       type_id: exercise.typeId,
       topic_id: exercise.topicId,
@@ -278,6 +451,21 @@ export default function PracticePage() {
           </div>
         )}
 
+        {resumed && !done && (
+          <div className="rounded-xl bg-sky-50 border border-sky-200 p-2 text-sm text-sky-900 flex items-center gap-2">
+            <span>↩️ המשכנו מאיפה שעצרת – מה שכתבת שמור.</span>
+            <button
+              className="btn-ghost text-xs mr-auto"
+              onClick={() => {
+                clearResume(typeId);
+                newExercise(level);
+              }}
+            >
+              תרגיל אחר
+            </button>
+          </div>
+        )}
+
         {/* accepted lines */}
         {history.length > 0 && (
           <div className="card space-y-2">
@@ -372,7 +560,8 @@ export default function PracticePage() {
                     autoFocus
                     keyboardHostId="kb-host"
                     onChange={() => {
-                      if (firstInputRef.current === null) firstInputRef.current = Date.now();
+                      if (firstInputRef.current === null) firstInputRef.current = Math.round(activeMs() / 1000);
+                      draftDirty.current = true;
                     }}
                   />
                 </div>
@@ -413,7 +602,7 @@ export default function PracticePage() {
                   <button
                     className="btn-soft text-xs"
                     onClick={() => {
-                      logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round((Date.now() - startRef.current) / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, Math.round((firstInputRef.current - startRef.current) / 1000)) }).then(reload);
+                      logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round(activeMs() / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current) }).then(reload);
                       setSessionWrong((w) => w + wrongCount);
                       const lv = level > 1 ? level - 1 : 1;
                       setLevel(lv);

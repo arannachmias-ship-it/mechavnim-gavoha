@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TOPICS, RECOMMENDED_PATH, BADGES } from "@/content/topics";
 import { useProgress } from "@/lib/client";
 import TopBar from "@/components/TopBar";
-import { Txt } from "@/components/MathText";
+import { Txt, Math as M } from "@/components/MathText";
+import { lastResume, agoText, clearResume, type ResumeState } from "@/lib/resume";
 
 function Stars({ n }: { n: number }) {
   return (
@@ -22,6 +23,11 @@ export default function LearnHome() {
   useEffect(() => {
     if (error === "unauth") router.replace("/");
   }, [error, router]);
+
+  const [resume, setResume] = useState<ResumeState | null>(null);
+  useEffect(() => {
+    setResume(lastResume());
+  }, []);
 
   const nextTopicId = summary ? RECOMMENDED_PATH.find((id) => (summary.topics[id]?.stars ?? 0) < 2) ?? RECOMMENDED_PATH[0] : RECOMMENDED_PATH[0];
   const nextTopic = TOPICS.find((t) => t.id === nextTopicId)!;
@@ -43,6 +49,31 @@ export default function LearnHome() {
             <div className="card text-center py-3">
               <div className="text-2xl font-black text-emerald-600">{summary.todayCount}</div>
               <div className="text-xs text-slate-500">תרגילים היום</div>
+            </div>
+          </section>
+        )}
+
+        {resume && (
+          <section className="card border-2 border-sky-300 bg-sky-50 space-y-2">
+            <div className="text-sm text-sky-900 font-semibold">↩️ עצרת באמצע {resume.title ? `– ${resume.title}` : ""} <span className="text-sky-700/70 font-normal">({agoText(resume.savedAt)})</span></div>
+            {resume.promptLatex && (
+              <div className="text-xl">
+                <M latex={resume.promptLatex} block />
+              </div>
+            )}
+            <div className="flex gap-2 items-center">
+              <Link href={`/practice/${resume.typeId}`} className="btn-primary flex-1 text-center">
+                להמשיך מאיפה שעצרת ←
+              </Link>
+              <button
+                className="btn-ghost text-sm"
+                onClick={() => {
+                  clearResume(resume.typeId);
+                  setResume(null);
+                }}
+              >
+                לא צריך
+              </button>
             </div>
           </section>
         )}
