@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
 import type { MathfieldElement } from "mathlive";
+import { buildLayout } from "@/lib/math/keyboard";
 
 export interface MathFieldHandle {
   getValue: () => string;
@@ -15,10 +16,21 @@ interface Props {
   onEnter?: () => void;
   onChange?: (latex: string) => void;
   autoFocus?: boolean;
+  /** הנעלמים של התרגיל הנוכחי – המקלדת נבנית סביבם, כך שאף אות לא תיחסר */
   variables?: string[];
   /** id of an element to host the virtual keyboard (inline instead of overlay) */
   keyboardHostId?: string;
 }
+
+type VKB = {
+  layouts: unknown;
+  addEventListener: (t: string, f: () => void) => void;
+  visible: boolean;
+  boundingRect: DOMRect;
+  show: () => void;
+  hide: () => void;
+};
+const vkb = () => (window as unknown as { mathVirtualKeyboard: VKB }).mathVirtualKeyboard;
 
 let configured = false;
 async function setup() {
@@ -28,8 +40,7 @@ async function setup() {
     ml.MathfieldElement.fontsDirectory = "https://unpkg.com/mathlive@0.110.0/fonts";
     ml.MathfieldElement.soundsDirectory = null;
     ml.MathfieldElement.locale = "he";
-    // custom compact keyboard
-    const kb = (window as unknown as { mathVirtualKeyboard: { layouts: unknown; addEventListener: (t: string, f: () => void) => void; visible: boolean; boundingRect: DOMRect } }).mathVirtualKeyboard;
+    const kb = vkb();
     // keep the app's fixed bottom bar above the keyboard: publish keyboard height as a CSS variable
     const publish = () => {
       const h = kb.visible ? Math.round(kb.boundingRect.height) : 0;
@@ -38,60 +49,12 @@ async function setup() {
     };
     kb.addEventListener("geometrychange", publish);
     kb.addEventListener("virtual-keyboard-toggle", publish);
-    kb.layouts = [
-      {
-        label: "מקלדת",
-        displayEditToolbar: false,
-        rows: [
-          [
-            { latex: "x", variants: ["y", "a", "b", "t", "m", "n", "c"] },
-            { latex: "y", variants: ["a", "b", "t", "m", "n", "c"] },
-            { label: "7", latex: "7" },
-            { label: "8", latex: "8" },
-            { label: "9", latex: "9" },
-            { label: "÷", insert: "\\frac{#@}{#?}" },
-            { label: "(", latex: "(" },
-            { label: ")", latex: ")" },
-          ],
-          [
-            { latex: "#@^{2}", label: "x²", insert: "#@^{2}" },
-            { latex: "#@^{#?}", label: "xⁿ", insert: "#@^{#?}" },
-            { label: "4", latex: "4" },
-            { label: "5", latex: "5" },
-            { label: "6", latex: "6" },
-            { label: "×", latex: "\\cdot" },
-            { label: "√", insert: "\\sqrt{#0}" },
-            { label: "⌫", command: ["deleteBackward"], class: "action" },
-          ],
-          [
-            { label: "a", latex: "a" },
-            { label: "b", latex: "b" },
-            { label: "1", latex: "1" },
-            { label: "2", latex: "2" },
-            { label: "3", latex: "3" },
-            { label: "−", latex: "-" },
-            { label: "←", command: ["moveToPreviousChar"], class: "action" },
-            { label: "→", command: ["moveToNextChar"], class: "action" },
-          ],
-          [
-            { label: "t", latex: "t" },
-            { label: "m", latex: "m" },
-            { label: "0", latex: "0" },
-            { label: ".", latex: "." },
-            { label: "=", latex: "=" },
-            { label: "+", latex: "+" },
-            { label: ",", latex: ",", variants: ["\\ne", "\\pm"] },
-            { label: "≠", latex: "\\ne" },
-            { label: "↵", command: ["commit"], class: "action" },
-          ],
-        ],
-      },
-    ];
+    kb.layouts = buildLayout();
   }
   return ml;
 }
 
-const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeholder, onEnter, onChange, autoFocus, keyboardHostId }, ref) {
+const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeholder, onEnter, onChange, autoFocus, variables, keyboardHostId }, ref) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mfRef = useRef<MathfieldElement | null>(null);
   const [empty, setEmpty] = useState(true);
@@ -99,6 +62,7 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
   const onChangeRef = useRef(onChange);
   onEnterRef.current = onEnter;
   onChangeRef.current = onChange;
+  const varsKey = (variables ?? []).join("");
 
   useImperativeHandle(ref, () => ({
     getValue: () => mfRef.current?.getValue("latex") ?? "",
@@ -117,6 +81,23 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
     },
   }));
 
+  // המקלדת מתעדכנת לפי הנעלמים של התרגיל הנוכחי
+  useEffect(() => {
+    let cancelled = false;
+    setup().then(() => {
+      if (cancelled) return;
+      try {
+        vkb().layouts = buildLayout(variables ?? []);
+      } catch {
+        /* ignore */
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [varsKey]);
+
   useEffect(() => {
     let cancelled = false;
     let mf: MathfieldElement | null = null;
@@ -130,7 +111,7 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       hostRef.current.innerHTML = "";
       hostRef.current.appendChild(mf);
       mfRef.current = mf;
-      const kb = (window as unknown as { mathVirtualKeyboard: { show: () => void; hide: () => void } }).mathVirtualKeyboard;
+      const kb = vkb();
       void keyboardHostId; // (legacy) the keyboard is now MathLive's standard bottom-sheet – reliable on phones
       mf.addEventListener("focusin", () => kb.show());
       mf.addEventListener("focusout", () => {
