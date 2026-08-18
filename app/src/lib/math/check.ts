@@ -301,6 +301,21 @@ export function nodeCount(node: MathNode): number {
   });
   return c;
 }
+/**
+ * "כמה מסובך" הביטוי – בלי להיענש על *איך* כותבים את הסימן.
+ * "5t-2y" ו-"-2y+5t" הם אותה תשובה סופית בדיוק, אבל בגרסה השנייה המינוס הקדמי
+ * מוסיף צומת unaryMinus ולכן ספירה רגילה הייתה מחזירה מספר גדול יותר – ונגה
+ * הייתה מקבלת "נכון, ממשיכים" במקום "סיימת". לכן מתעלמים מצמתי unaryMinus.
+ */
+export function complexity(node: MathNode): number {
+  let c = 0;
+  node.traverse((n) => {
+    if (n.type === "ParenthesisNode") return;
+    if (n.type === "OperatorNode" && (n as unknown as { fn?: string }).fn === "unaryMinus") return;
+    c++;
+  });
+  return c;
+}
 /** parentheses that wrap a sum/difference (the ones that matter for "expanded") */
 export function parenCount(node: MathNode): number {
   let c = 0;

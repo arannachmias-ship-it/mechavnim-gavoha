@@ -4,6 +4,7 @@ import {
   nodesEquivalent,
   parseExpr,
   nodeCount,
+  complexity,
   parenCount,
   solutionSet,
   sameRoots,
@@ -160,8 +161,10 @@ function checkExpr(ex: Exercise, history: string[], input: string): CheckResult 
     return { status: "same", message: "זה בדיוק מה שכבר כתוב. תתקדמי צעד.", stage };
   }
   const finalNode = parseExpr(ex.finalPlain!)!;
-  const fc = nodeCount(finalNode);
-  const sc = nodeCount(node);
+  // משווים "כמה מסובך" ולא ספירת-צמתים גולמית, כדי שסדר האיברים ואופן כתיבת המינוס
+  // לא יקבעו אם התרגיל נגמר. "-2y+5t" זו בדיוק אותה תשובה סופית כמו "5t-2y".
+  const fc = complexity(finalNode);
+  const sc = complexity(node);
   let done = false;
   const form = ex.finalForm ?? "any";
   if (form === "expanded") done = sc <= fc && !hasSumInsideProductOrPower(node);
