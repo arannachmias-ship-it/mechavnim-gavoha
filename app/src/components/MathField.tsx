@@ -124,7 +124,13 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
         setEmpty(!v.trim());
         onChangeRef.current?.(v);
       });
-      mf.addEventListener("change", () => onEnterRef.current?.());
+      mf.addEventListener("change", () => {
+        // "change" של MathLive נורה גם בלחיצה מכוונת על ↓ וגם סתם כשהשדה מאבד פוקוס –
+        // כולל כשיוצאים מהאפליקציה למחשבון/וואטסאפ (המסך עובר לרקע). לא רוצים "לבדוק"
+        // תשובה שלא הושלמה רק כי היא יצאה לרגע; מדלגים כשהדף לא גלוי כרגע.
+        if (typeof document !== "undefined" && document.hidden) return;
+        onEnterRef.current?.();
+      });
       mf.addEventListener("keydown", (e: KeyboardEvent) => {
         if (e.key === "Enter") {
           e.preventDefault();
