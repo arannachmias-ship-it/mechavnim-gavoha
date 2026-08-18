@@ -1,10 +1,14 @@
 "use client";
 import katex from "katex";
 import { isolateMath } from "@/lib/bidi";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+
+/** מתחת לכמה קנה-מידה עדיף לתת לה לגלול אופקית ולא לכווץ עוד – שלא יצא זעיר מדי לקריאה */
+const MIN_FIT_SCALE = 0.55;
 
 /** Render a LaTeX string as display math */
 export function Math({ latex, block = false, className = "" }: { latex: string; block?: boolean; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
   const html = useMemo(() => {
     try {
       return katex.renderToString(latex, { displayMode: block, throwOnError: false, strict: false, trust: true });
@@ -12,7 +16,37 @@ export function Math({ latex, block = false, className = "" }: { latex: string; 
       return latex;
     }
   }, [latex, block]);
-  return <span className={`math-line ${block ? "block" : "inline-block"} ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
+
+  // תרגילים ארוכים (הרבה איברים) יכלו לצאת מהמסך בנייד. במקום לגלוש – מקטינים את הגופן (fontSize,
+  // לא transform – כדי שהגובה יתאים את עצמו לבד ולא ייחתך שום דבר), ורק אם זה כבר לא מספיק נותנים
+  // גלילה אופקית קלה בתוך המסגרת עצמה, לא בעמוד כולו.
+  useEffect(() => {
+    if (!block) return;
+    const el = ref.current;
+    const inner = el?.firstElementChild as HTMLElement | null;
+    if (!el || !inner) return;
+    const fit = () => {
+      inner.style.fontSize = "";
+      const containerW = el.clientWidth;
+      const contentW = inner.scrollWidth;
+      if (containerW <= 0 || contentW <= containerW) return;
+      // (הפונקציה כאן נקראת Math, כמו האובייקט הגלובלי – ניגשים אליו דרך globalThis כדי לא להתנגש)
+      const rawScale = containerW / contentW;
+      const scale = globalThis.Math.max(MIN_FIT_SCALE, rawScale);
+      const naturalPx = parseFloat(getComputedStyle(inner).fontSize);
+      if (naturalPx > 0) inner.style.fontSize = `${naturalPx * scale}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    window.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, [html, block]);
+
+  return <span ref={ref} className={`math-line ${block ? "block w-full overflow-x-auto" : "inline-block"} ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 /** Render Hebrew text with inline $...$ math and **bold** */
