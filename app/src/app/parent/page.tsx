@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TOPICS, ALL_TYPES } from "@/content/topics";
 import { MISTAKE_LABELS } from "@/lib/progress";
 import { useProgress } from "@/lib/client";
@@ -17,11 +17,20 @@ const heat = (m: number, attempts: number) => {
 };
 
 export default function ParentPage() {
-  const { summary, error } = useProgress();
+  const { summary, error, reload } = useProgress();
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     if (error === "unauth") router.replace("/");
   }, [error, router]);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await reload();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   if (!summary) return <main className="p-6 text-slate-500">טוען…</main>;
   const maxMin = Math.max(1, ...summary.days.map((d) => d.minutes));
   const dayNames = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
@@ -30,7 +39,7 @@ export default function ParentPage() {
 
   return (
     <>
-      <TopBar summary={summary} title="👨‍👧 מסך הורה – נגה" />
+      <TopBar summary={summary} title="👨‍👧 מסך הורה – נגה" onRefresh={handleRefresh} refreshing={refreshing} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-16 space-y-5">
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
