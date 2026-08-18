@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TOPIC_BY_ID, TYPE_TO_TOPIC } from "@/content/topics";
 import { generate, generateWithSeed } from "@/lib/math/generators";
 import { parenCount } from "@/lib/math/check";
+import { exerciseVariables } from "@/lib/math/vars";
 import { checkLine } from "@/lib/math/engine";
 import type { Exercise, CheckResult } from "@/lib/math/types";
 import { useProgress, logAttempt } from "@/lib/client";
@@ -308,6 +309,8 @@ export default function PracticePage() {
   }, [ex, history, result]);
 
   const stageInfo = ex?.stages[Math.min(currentStage, ex.stages.length - 1)];
+  /** האותיות של התרגיל – המקלדת נבנית סביבן (למשל תרגיל עם m ו-n) */
+  const kbVars = useMemo(() => (ex ? exerciseVariables(ex) : []), [ex]);
 
   function finish(exercise: Exercise, hist: string[], extraReveal = 0) {
     const dur = Math.round(activeMs() / 1000);
@@ -555,6 +558,7 @@ export default function PracticePage() {
                 <div className="flex-1">
                   <MathField
                     ref={fieldRef}
+                    variables={kbVars}
                     placeholder="השורה הבאה…"
                     onEnter={submit}
                     autoFocus
