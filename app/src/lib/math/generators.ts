@@ -2,6 +2,7 @@ import type { MathNode } from "mathjs";
 import { Poly, polyLatex, polyPlain, parenIfNeeded, rint, rnz, pick, shuffle, frac, F, gcd, fracLatex, rnd, withSeed, newSeed } from "./poly";
 import { parenCount, hasDivision, nodeVars, nodeCount, parseExpr } from "./check";
 import type { Exercise, StageInfo, Step, Trap } from "./types";
+import { GEO_GENERATORS } from "./geoGen";
 
 let counter = 0;
 const uid = (t: string) => `${t}-${(counter++).toString(36)}-${Math.floor(rnd() * 1e6).toString(36)}`;
@@ -1286,6 +1287,7 @@ export const GENERATORS: Record<string, (level: number) => Exercise> = {
   quadratic_eq: genQuadraticEq,
   order_ops: genOrderOps,
   alg_frac: genAlgFrac,
+  ...GEO_GENERATORS,
 };
 
 /**

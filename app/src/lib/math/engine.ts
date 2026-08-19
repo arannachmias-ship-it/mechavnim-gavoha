@@ -16,6 +16,7 @@ import {
 } from "./check";
 import type { Exercise, CheckResult } from "./types";
 import { checkOrder, isNumericLine } from "./orderCheck";
+import { checkGeo } from "./geo";
 
 const near = (a: number, b: number) => Math.abs(a - b) < 1e-6 * Math.max(1, Math.abs(a));
 
@@ -81,6 +82,7 @@ function clean(input: string) {
 }
 
 export function checkLine(ex: Exercise, history: string[], rawInput: string): CheckResult {
+  if (ex.kind === "geo") return checkGeo(ex, history, rawInput);
   if (ex.kind === "equation") {
     const sol = ex.solutions!;
     if (/אין\s*פתרון|אין\s*x|NONE/i.test(rawInput) || rawInput.trim() === "∅") {

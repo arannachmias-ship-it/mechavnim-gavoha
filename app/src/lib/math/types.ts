@@ -1,6 +1,39 @@
 import type { MathNode } from "mathjs";
 
-export type ExerciseKind = "expr" | "equation" | "system" | "fracdomain";
+export type ExerciseKind = "expr" | "equation" | "system" | "fracdomain" | "geo";
+
+/* ---------- פונקציות וגאומטריה אנליטית (kind = "geo") ---------- */
+/** מה מבקשים מנגה למצוא – ערך (m=2), נקודה ((3,0)) או משוואה של הגרף (y=2x+1) */
+export interface GeoAsk {
+  key: string;
+  label: string; // בשפה של ארן, לרשימת המשימות
+  kind: "value" | "point" | "eq";
+  value?: number;
+  x?: number;
+  y?: number;
+}
+/** הגרף שהתשובה "eq" צריכה לתאר – ישר y=mx+b או פרבולה y=ax²+bx+c */
+export interface GeoCurve {
+  kind: "line" | "parabola";
+  coeffs: number[];
+}
+/** טעות צפויה: ערך/נקודה שנגה עלולה לכתוב, והמשפט שמסביר מה קרה */
+export interface GeoTrap {
+  key?: string; // ערך של משתנה, או "point"
+  value?: number;
+  x?: number;
+  y?: number;
+  message: string;
+  mistake?: string;
+}
+/** ציור: מה מראים לנגה במערכת הצירים (רק הנתונים – לא התשובות) */
+export interface PlotSpec {
+  points?: { x: number; y: number; label?: string }[];
+  lines?: { m: number; b: number; label?: string }[];
+  parabolas?: { a: number; b: number; c: number }[];
+  segments?: { a: [number, number]; b: [number, number]; dashed?: boolean; label?: string }[];
+  polygon?: [number, number][];
+}
 export type FinalForm = "expanded" | "factored" | "any";
 
 export interface Step {
@@ -44,6 +77,15 @@ export interface Exercise {
   vars?: string[];
   solutionMap?: Record<string, number>;
   askFor?: string[];
+  /** geo: functions & analytic geometry */
+  asks?: GeoAsk[];
+  curve?: GeoCurve;
+  /** ערכים שהמחולל יודע (m, b, d…) – כדי לאשר שורות ביניים נכונות גם אם לא ביקשנו אותן */
+  params?: Record<string, number>;
+  geoTraps?: GeoTrap[];
+  /** "AB=5" עונה על d – מיפוי שם קטע (segKey) לבקשה */
+  aliases?: Record<string, string>;
+  plot?: PlotSpec;
   /** guidance */
   steps: Step[];
   stages: StageInfo[];

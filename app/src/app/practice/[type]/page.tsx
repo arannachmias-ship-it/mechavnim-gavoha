@@ -14,6 +14,8 @@ import TopBar from "@/components/TopBar";
 import { Math as M, RichText, Txt } from "@/components/MathText";
 import MathField, { type MathFieldHandle } from "@/components/MathField";
 import FormulaSheet from "@/components/FormulaSheet";
+import CoordPlot from "@/components/CoordPlot";
+import { geoChecklist } from "@/lib/math/geo";
 import { PRAISE_NORMAL, PRAISE_HARD, PRAISE_MILESTONE, AFTER_STRUGGLE, Rotator, sessionSummary } from "@/content/voice";
 import { saveResume, loadResume, clearResume, SESSION_MAX_AGE_MS, type ResumeState } from "@/lib/resume";
 
@@ -78,6 +80,9 @@ export default function PracticePage() {
   const [sessionWrong, setSessionWrong] = useState(0);
   const [praise, setPraise] = useState<{ head: string; sub?: string; tier: "normal" | "hard" | "milestone" } | null>(null);
   const [showSummary, setShowSummary] = useState(false);
+  /** שקיפות הרמה: מה קרה לרמה ולמה, וחלון "איך עולים רמה?" */
+  const [levelNote, setLevelNote] = useState<{ kind: "up" | "down"; text: string } | null>(null);
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
 
   useEffect(() => {
     if (error === "unauth") router.replace("/");
@@ -324,6 +329,7 @@ export default function PracticePage() {
     const clean = hintsUsed === 0 && rev === 0 && wrongCount === 0;
     const nextClean = clean ? cleanRun + 1 : 0;
     setCleanRun(nextClean);
+    setLevelNote(null);
     // ---- הקול: מדרג מחמאות + שכבה 2 ----
     const struggled = wrongCount >= 2 || hintsUsed >= 2;
     const hard = exercise.level >= 3 || struggled;
@@ -348,10 +354,11 @@ export default function PracticePage() {
       prompt: exercise.promptLatex.slice(0, 500),
       mistakes,
     }).then(reload);
-    // adaptive level
+    // adaptive level – עולים אחרי 3 תרגילים נקיים ברצף (בלי רמז, בלי הצגת צעד, בלי טעות)
     if (nextClean >= 3 && level < 3) {
       setLevel(level + 1);
       setCleanRun(0);
+      setLevelNote({ kind: "up", text: `שלושה נקיים ברצף – עלית לרמה ${level + 1}. התרגיל הבא כבר ברמה החדשה.` });
     }
   }
 
@@ -426,9 +433,16 @@ export default function PracticePage() {
   }
 
   function next() {
-    // level down if struggled a lot
+    // level down if struggled a lot – 4 טעויות ומעלה בתרגיל אחד ⇒ הבא רמה אחת למטה
     let lv = level;
-    if (wrongCount >= 4 && lv > 1) lv--;
+    const wentUp = levelNote?.kind === "up";
+    setLevelNote(null);
+    if (wrongCount >= 4 && lv > 1) {
+      lv--;
+      setLevelNote({ kind: "down", text: `${wrongCount} טעויות בתרגיל הקודם – ירדנו לרמה ${lv} כדי לחזק. שלושה נקיים ברצף ומטפסים חזרה.` });
+    } else if (wentUp) {
+      setLevelNote({ kind: "up", text: `רמה ${lv} – זו הרמה החדשה. תרגיל נקי = בלי רמז, בלי הצגת צעד, בלי טעות.` });
+    }
     setLevel(lv);
     newExercise(lv);
   }
@@ -440,10 +454,71 @@ export default function PracticePage() {
       <TopBar tester={profile === "tester"} summary={summary} back={isCustom ? "/photo" : `/learn/${topicId}`} title={`🎯 ${typeInfo.title}`} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-40 space-y-3">
         <div className="flex items-center gap-2 text-sm">
-          <span className="chip bg-slate-100">רמה {"⭐".repeat(level)}</span>
+          <button
+            className="chip bg-slate-100 hover:bg-slate-200 transition"
+            onClick={() => setShowLevelInfo(true)}
+            title="איך עולים ויורדים רמה?"
+            aria-label="הסבר על הרמות"
+          >
+            רמה {"⭐".repeat(level)}
+            {level < 3 && (
+              <span className="mr-1 font-mono tracking-tight" aria-label={`${cleanRun} מתוך 3 נקיים ברצף`}>
+                <span className="text-emerald-600">{"●".repeat(cleanRun)}</span>
+                <span className="text-slate-300">{"○".repeat(Math.max(0, 3 - cleanRun))}</span>
+              </span>
+            )}
+            {level >= 3 && <span className="mr-1 text-emerald-700 text-xs">מקס</span>}
+            <span className="mr-1 text-slate-400">ⓘ</span>
+          </button>
           <span className="chip bg-slate-100">היום בסשן: {sessionCount}</span>
           {stageInfo && !done && <span className="chip bg-amber-100 text-amber-800 truncate">שלב: <Txt s={stageInfo.name} /></span>}
         </div>
+
+        {levelNote && !done && (
+          <div className={`rounded-xl px-3 py-2 text-sm flex items-start gap-2 animate-pop ${levelNote.kind === "up" ? "bg-emerald-50 text-emerald-900 border border-emerald-200" : "bg-sky-50 text-sky-900 border border-sky-200"}`}>
+            <span>{levelNote.kind === "up" ? "⬆️" : "⬇️"}</span>
+            <span className="flex-1">{levelNote.text}</span>
+            <button className="text-xs opacity-60 hover:opacity-100" onClick={() => setLevelNote(null)} aria-label="סגור">✕</button>
+          </div>
+        )}
+        {!done && ex && level < 3 && (hintsUsed > 0 || reveals > 0 || wrongCount > 0) && (
+          <div className="text-xs text-slate-500 -mt-1">התרגיל הזה כבר לא נחשב &quot;נקי&quot; ({hintsUsed > 0 ? "רמז" : reveals > 0 ? "הצגת צעד" : "טעות"}) – הרצף לרמה הבאה מתחיל מחדש בתרגיל הבא. זה בסדר, ככה לומדים.</div>
+        )}
+
+        {showLevelInfo && (
+          <div className="fixed inset-0 z-30 bg-black/40 flex items-end sm:items-center justify-center p-3" onClick={() => setShowLevelInfo(false)}>
+            <div className="bg-white rounded-2xl p-4 max-w-md w-full space-y-3 shadow-xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="איך עולים רמה">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg">איך עולים ויורדים רמה?</h3>
+                <button className="btn-ghost text-sm" onClick={() => setShowLevelInfo(false)}>סגור</button>
+              </div>
+              <div className="text-sm leading-relaxed space-y-2">
+                <p>
+                  יש 3 רמות קושי לכל סוג תרגיל: <b>⭐ ⭐⭐ ⭐⭐⭐</b>. את עכשיו ברמה <b>{level}</b>{level < 3 ? ` – ${cleanRun} מתוך 3 נקיים ברצף.` : " – הרמה הכי גבוהה."}
+                </p>
+                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+                  <div className="font-semibold text-emerald-900">⬆️ עולים רמה</div>
+                  <div className="text-emerald-900/90">
+                    <b>שלושה תרגילים &quot;נקיים&quot; ברצף</b>. נקי = פתרת נכון <b>בלי רמז, בלי &quot;הצג את הצעד&quot;, ובלי אף שורה אדומה</b>. הנקודות הירוקות ליד הרמה סופרות לך את הרצף.
+                  </div>
+                </div>
+                <div className="rounded-xl bg-sky-50 border border-sky-200 p-3">
+                  <div className="font-semibold text-sky-900">⬇️ יורדים רמה</div>
+                  <div className="text-sky-900/90">
+                    רק בשני מקרים: <b>4 טעויות (שורות אדומות) או יותר בתרגיל אחד</b> – התרגיל הבא יהיה רמה אחת למטה. או אם <b>דילגת</b> על תרגיל. רמז או טעות אחת לא מורידים רמה – הם רק מאפסים את הרצף.
+                  </div>
+                </div>
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3">
+                  <div className="font-semibold text-amber-900">🚪 מאיפה מתחילים</div>
+                  <div className="text-amber-900/90">כשנכנסים לתרגול מתחילים ברמה שבה סיימת בפעם הקודמת. ואם השליטה שלך בנושא גבוהה (מעל 80% בתרגילים האחרונים) – מתחילים רמה אחת גבוה יותר.</div>
+                </div>
+                <p className="text-slate-600">
+                  הרמה לא ציון – היא רק קובעת כמה קשה התרגיל הבא. רמה גבוהה = יותר נקודות ⭐ לכל תרגיל ({"10/20/30"} לרמות 1/2/3), פחות אם השתמשת ברמזים.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {ex && (
           <div className={`card border-2 ${done ? "border-emerald-300 bg-emerald-50" : "border-amber-200"}`}>
@@ -451,6 +526,21 @@ export default function PracticePage() {
             <div className="text-2xl sm:text-3xl py-2">
               <M latex={ex.promptLatex} block />
             </div>
+            {ex.kind === "geo" && (
+              <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-start mt-1">
+                {ex.asks && ex.asks.length > 0 && (
+                  <ul className="text-sm space-y-1" aria-label="מה מחפשים">
+                    {geoChecklist(ex, history).map((c) => (
+                      <li key={c.key} className={`flex items-start gap-2 ${c.done ? "text-emerald-700" : "text-slate-700"}`}>
+                        <span className="shrink-0">{c.done ? "✅" : "⬜"}</span>
+                        <span className={c.done ? "line-through opacity-70" : ""}><Txt s={c.label} /></span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {ex.plot && <CoordPlot spec={ex.plot} size={200} />}
+              </div>
+            )}
           </div>
         )}
 
@@ -519,6 +609,16 @@ export default function PracticePage() {
               {praise?.head ?? "נכון."}
             </div>
             {praise?.sub && <div className="text-slate-700 text-sm leading-relaxed">{praise.sub}</div>}
+            {levelNote?.kind === "up" && (
+              <div className="rounded-xl bg-emerald-100 border border-emerald-300 px-3 py-2 text-emerald-900 font-semibold animate-pop">⬆️ {levelNote.text}</div>
+            )}
+            {!levelNote && level < 3 && (
+              <div className="text-xs text-slate-500">
+                רצף נקי לרמה הבאה: <span className="text-emerald-600 font-mono">{"●".repeat(cleanRun)}</span>
+                <span className="text-slate-300 font-mono">{"○".repeat(Math.max(0, 3 - cleanRun))}</span>
+                {cleanRun === 0 && (hintsUsed > 0 || reveals > 0 || wrongCount > 0) ? " – התחיל מחדש (היה רמז/טעות). התרגיל הבא נקי – וזה 1." : cleanRun > 0 ? ` – עוד ${3 - cleanRun} ועולים.` : ""}
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <span className="chip bg-amber-100 text-amber-800 text-base">+{xpGain} ⭐</span>
               {wrongCount > 0 && !praise?.sub && <span className="text-sm text-slate-500">({wrongCount} {wrongCount === 1 ? "ניסיון" : "ניסיונות"} בדרך – זה חלק מהעניין)</span>}
@@ -586,6 +686,11 @@ export default function PracticePage() {
                     x≠
                   </button>
                 )}
+                {ex.kind === "geo" && (
+                  <button className="btn-ghost text-sm" onClick={() => fieldRef.current?.insert?.("\\left(#?,#?\\right)")} title="נקודה (x, y)">
+                    ( , )
+                  </button>
+                )}
                 {ex.kind === "equation" && (
                   <>
                     <button className="btn-ghost text-sm" onClick={() => specialAnswer("אין פתרון")}>
@@ -609,6 +714,7 @@ export default function PracticePage() {
                       logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round(activeMs() / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current) }).then(reload);
                       setSessionWrong((w) => w + wrongCount);
                       const lv = level > 1 ? level - 1 : 1;
+                      setLevelNote(lv < level ? { kind: "down", text: `דילגת – ירדנו לרמה ${lv}. שלושה נקיים ברצף ומטפסים חזרה.` } : null);
                       setLevel(lv);
                       newExercise(lv);
                     }}

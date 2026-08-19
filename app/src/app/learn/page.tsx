@@ -38,9 +38,9 @@ export default function LearnHome() {
       <main className="max-w-3xl mx-auto w-full p-4 pb-16 space-y-5">
         {summary && (
           <section className="grid grid-cols-3 gap-2">
-            <div className="card text-center py-3">
+            <div className="card text-center py-3" title={`דרגה לפי נקודות ⭐. יש לך ${summary.xp}, הדרגה הבאה ב-${25 * summary.level * summary.level}.`}>
               <div className="text-2xl font-black text-amber-600">{summary.level}</div>
-              <div className="text-xs text-slate-500">רמה</div>
+              <div className="text-xs text-slate-500">דרגה (⭐ {summary.xp}/{25 * summary.level * summary.level})</div>
             </div>
             <div className="card text-center py-3">
               <div className="text-2xl font-black text-orange-600">{summary.streak}🔥</div>
@@ -113,6 +113,7 @@ export default function LearnHome() {
                     <div className="font-bold leading-tight">
                       <span className="text-slate-400 text-sm ml-1">{i + 1}.</span>
                       {t.title}
+                      {t.phase === 2 && <span className="chip bg-white/70 text-[10px] text-slate-500 mr-1 align-middle">שלב ב'</span>}
                     </div>
                     <div className="text-xs text-slate-600 truncate"><Txt s={t.subtitle} /></div>
                     <div className="mt-1 flex items-center gap-2">

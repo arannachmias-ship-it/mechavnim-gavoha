@@ -7,6 +7,7 @@ import { useProgress } from "@/lib/client";
 import TopBar from "@/components/TopBar";
 import { Math as M, RichText, Txt } from "@/components/MathText";
 import Animation from "@/components/Animation";
+import CoordPlot from "@/components/CoordPlot";
 
 export default function TopicPage() {
   const params = useParams<{ topic: string }>();
@@ -43,6 +44,12 @@ export default function TopicPage() {
         {tab === "method" && (
           <div className="space-y-4">
             {topic.animation && <Animation id={topic.animation} />}
+            {topic.plot && (
+              <div className="card flex flex-col items-center gap-1">
+                <CoordPlot spec={topic.plot} size={240} />
+                <div className="text-xs text-slate-500">קודם הציור, אחר-כך הנוסחה.</div>
+              </div>
+            )}
             {topic.cards.map((c, i) => (
               <div key={i} className="card">
                 <h3 className="font-bold text-lg mb-2"><Txt s={c.title} /></h3>

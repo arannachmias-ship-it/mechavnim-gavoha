@@ -234,8 +234,10 @@ export type SolutionSet =
 export function solutionSet(eq: string, v = "x"): SolutionSet {
   const parts = eq.split("=");
   if (parts.length !== 2) return { kind: "unknown" };
-  const L = normalizeInput(parts[0]),
-    R = normalizeInput(parts[1]);
+  // mathjs.rationalize נופל על "-x^2-5x" ("Invalid ^ placing") – כותבים -1*x במקום -x
+  const fixNeg = (s: string) => s.replace(/(^|[(+\-*/])-([a-zA-Z])/g, "$1-1*$2");
+  const L = fixNeg(normalizeInput(parts[0])),
+    R = fixNeg(normalizeInput(parts[1]));
   if (!L || !R) return { kind: "unknown" };
   try {
     const diff = `(${L})-(${R})`;

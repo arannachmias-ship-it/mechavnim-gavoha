@@ -132,6 +132,9 @@ export function summarize(rows: AttemptRow[], now = new Date()): Summary {
   if (countTopic("systems") >= 10) badges.push("stalin10");
   if (countTopic("domain") >= 10) badges.push("guard10");
   if (countTopic("quadratic_eq") >= 10) badges.push("zero10");
+  if (countTopic("linear_func") >= 10) badges.push("floors10");
+  if (countTopic("parabola") + countTopic("parabola_line") >= 10) badges.push("smile10");
+  if (countTopic("analytic") >= 10) badges.push("pyth10");
   {
     let run = 0,
       best = 0;
@@ -231,5 +234,14 @@ export const MISTAKE_LABELS: Record<string, string> = {
   pair_order: "סדר בתוך זוג (משמאל לימין)",
   abc: "a, b, c – סימנים",
   formula: "נוסחת השורשים – הצבה",
+  slope_flip: "שיפוע הפוך (צעדים חלקי קומות)",
+  perp: "מאונך – הפכת רק פעם אחת (הפוך והפוך)",
+  axis_mix: "בלבול בין הקיר (ציר y) לרצפה (ציר x)",
+  vertex_sign: "קודקוד – הסימן של −b/2a",
+  sqrt: "מרחק – שכחה את השורש (פיתגורס)",
+  mid_sub: "אמצע – חיסור/בלי חלוקה ב-2 במקום ממוצע",
+  area_half: "שטח – שכחה לחלק ב-2",
+  point: "נקודה שגויה / לא הנקודה שביקשו",
+  geo: "פונקציות ואנליטית – אחר",
   other: "אחר",
 };
