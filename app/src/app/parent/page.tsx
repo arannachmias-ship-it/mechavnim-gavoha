@@ -8,6 +8,7 @@ import TopBar from "@/components/TopBar";
 import { Math as M, Txt } from "@/components/MathText";
 import AnthropicKeyCard from "@/components/AnthropicKeyCard";
 import InterviewCard from "@/components/InterviewCard";
+import PlanCard from "@/components/PlanCard";
 
 const heat = (m: number, attempts: number) => {
   if (!attempts) return "bg-slate-100 text-slate-400";
@@ -55,6 +56,8 @@ export default function ParentPage() {
             </div>
           ))}
         </section>
+
+        <PlanCard />
 
         {summary.todayCount > 0 && (
           <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-900 text-sm">

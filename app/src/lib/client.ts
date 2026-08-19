@@ -33,3 +33,23 @@ export async function logAttempt(body: Record<string, unknown>) {
     /* offline – ignore */
   }
 }
+
+/** 🎯 התוכנית עד המבחן (מחושבת בשרת) */
+export function usePlan() {
+  const [plan, setPlan] = useState<import("./plan").Plan | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const reload = useCallback(async () => {
+    try {
+      const r = await fetch("/api/plan", { cache: "no-store" });
+      if (r.status === 401) return setError("unauth");
+      const j = await r.json();
+      if (j.ok) setPlan(j.plan);
+    } catch {
+      setError("network");
+    }
+  }, []);
+  useEffect(() => {
+    reload();
+  }, [reload]);
+  return { plan, error, reload };
+}

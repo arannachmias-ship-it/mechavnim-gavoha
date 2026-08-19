@@ -3,7 +3,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TOPICS, RECOMMENDED_PATH, BADGES } from "@/content/topics";
-import { useProgress } from "@/lib/client";
+import { useProgress, usePlan } from "@/lib/client";
+import { PlanHomeCard } from "@/components/PlanWidgets";
 import TopBar from "@/components/TopBar";
 import { Txt, Math as M } from "@/components/MathText";
 import { lastResume, agoText, clearResume, type ResumeState } from "@/lib/resume";
@@ -19,6 +20,7 @@ function Stars({ n }: { n: number }) {
 
 export default function LearnHome() {
   const { summary, profile, error } = useProgress();
+  const { plan } = usePlan();
   const router = useRouter();
   useEffect(() => {
     if (error === "unauth") router.replace("/");
@@ -52,6 +54,8 @@ export default function LearnHome() {
             </div>
           </section>
         )}
+
+        {plan && <PlanHomeCard p={plan} />}
 
         {resume && (
           <section className="card border-2 border-sky-300 bg-sky-50 space-y-2">
