@@ -119,3 +119,21 @@ ${methodDictionary}
   const j = (await r.json()) as { content: { type: string; text?: string }[] };
   return { text: j.content.map((c) => c.text ?? "").join(""), model };
 }
+
+/** שיחה כללית (למשל ראיון משתמש): system + היסטוריה → תשובת טקסט */
+export async function chat(system: string, messages: { role: "user" | "assistant"; content: string }[], opts: { maxTokens?: number; temperature?: number } = {}): Promise<{ text: string; model: string }> {
+  const key = await getAnthropicKey();
+  if (!key) throw new Error("NO_KEY");
+  const model = await pickModel(key);
+  const r = await fetch(`${API}/messages`, {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": VERSION, "content-type": "application/json" },
+    body: JSON.stringify({ model, max_tokens: opts.maxTokens ?? 600, temperature: opts.temperature ?? 0.6, system, messages }),
+  });
+  if (!r.ok) {
+    const t = await r.text().catch(() => "");
+    throw new Error(`ANTHROPIC_${r.status}:${t.slice(0, 200)}`);
+  }
+  const j = (await r.json()) as { content: { type: string; text?: string }[] };
+  return { text: j.content.map((c) => c.text ?? "").join("").trim(), model };
+}

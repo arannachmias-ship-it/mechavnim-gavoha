@@ -143,3 +143,97 @@ export async function deleteSetting(key: string): Promise<void> {
   await ensureSchema();
   await sql`DELETE FROM settings WHERE key = ${key}`;
 }
+
+/* ---------------- ראיונות משתמש (נגה ↔ Claude) ---------------- */
+export interface InterviewMsg {
+  role: "assistant" | "user";
+  text: string;
+  at: string;
+}
+export interface InterviewRow {
+  id: number;
+  token: string;
+  title: string;
+  status: "open" | "done";
+  messages: InterviewMsg[];
+  summary: string | null;
+  created_at: string;
+  updated_at: string;
+}
+const memInterviews: InterviewRow[] = [];
+let memIvId = 1;
+
+async function ensureInterviews() {
+  const sql = sqlClient();
+  if (!sql) return;
+  await ensureSchema();
+  await sql`CREATE TABLE IF NOT EXISTS interviews (
+    id SERIAL PRIMARY KEY,
+    token TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'open',
+    messages JSONB NOT NULL DEFAULT '[]',
+    summary TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+}
+function normIv(r: InterviewRow): InterviewRow {
+  return {
+    ...r,
+    messages: typeof r.messages === "string" ? JSON.parse(r.messages) : (r.messages ?? []),
+    created_at: typeof r.created_at === "string" ? r.created_at : new Date(r.created_at as unknown as Date).toISOString(),
+    updated_at: typeof r.updated_at === "string" ? r.updated_at : new Date(r.updated_at as unknown as Date).toISOString(),
+    summary: r.summary ?? null,
+  };
+}
+export async function createInterview(token: string, title: string): Promise<InterviewRow> {
+  const sql = sqlClient();
+  if (!sql) {
+    const row: InterviewRow = { id: memIvId++, token, title, status: "open", messages: [], summary: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    memInterviews.push(row);
+    return row;
+  }
+  await ensureInterviews();
+  const rows = (await sql`INSERT INTO interviews (token, title) VALUES (${token}, ${title}) RETURNING *`) as unknown as InterviewRow[];
+  return normIv(rows[0]);
+}
+export async function getInterview(token: string): Promise<InterviewRow | null> {
+  const sql = sqlClient();
+  if (!sql) return memInterviews.find((i) => i.token === token) ?? null;
+  await ensureInterviews();
+  const rows = (await sql`SELECT * FROM interviews WHERE token = ${token}`) as unknown as InterviewRow[];
+  return rows.length ? normIv(rows[0]) : null;
+}
+export async function listInterviews(): Promise<InterviewRow[]> {
+  const sql = sqlClient();
+  if (!sql) return [...memInterviews].reverse();
+  await ensureInterviews();
+  const rows = (await sql`SELECT * FROM interviews ORDER BY created_at DESC LIMIT 50`) as unknown as InterviewRow[];
+  return rows.map(normIv);
+}
+export async function updateInterview(token: string, patch: { messages?: InterviewMsg[]; status?: "open" | "done"; summary?: string | null }): Promise<void> {
+  const sql = sqlClient();
+  if (!sql) {
+    const row = memInterviews.find((i) => i.token === token);
+    if (row) Object.assign(row, patch, { updated_at: new Date().toISOString() });
+    return;
+  }
+  await ensureInterviews();
+  const cur = await getInterview(token);
+  if (!cur) return;
+  const messages = patch.messages ?? cur.messages;
+  const status = patch.status ?? cur.status;
+  const summary = patch.summary === undefined ? cur.summary : patch.summary;
+  await sql`UPDATE interviews SET messages = ${JSON.stringify(messages)}, status = ${status}, summary = ${summary}, updated_at = now() WHERE token = ${token}`;
+}
+export async function deleteInterview(token: string): Promise<void> {
+  const sql = sqlClient();
+  if (!sql) {
+    const i = memInterviews.findIndex((x) => x.token === token);
+    if (i >= 0) memInterviews.splice(i, 1);
+    return;
+  }
+  await ensureInterviews();
+  await sql`DELETE FROM interviews WHERE token = ${token}`;
+}

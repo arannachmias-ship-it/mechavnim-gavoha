@@ -7,6 +7,7 @@ import { useProgress } from "@/lib/client";
 import TopBar from "@/components/TopBar";
 import { Math as M, Txt } from "@/components/MathText";
 import AnthropicKeyCard from "@/components/AnthropicKeyCard";
+import InterviewCard from "@/components/InterviewCard";
 
 const heat = (m: number, attempts: number) => {
   if (!attempts) return "bg-slate-100 text-slate-400";
@@ -226,6 +227,7 @@ export default function ParentPage() {
             {summary.recent.length === 0 && <div className="text-slate-500 text-sm">עדיין אין תרגילים.</div>}
           </div>
         </section>
+        <InterviewCard />
         <AnthropicKeyCard />
 
         <div className="text-center space-y-2">
