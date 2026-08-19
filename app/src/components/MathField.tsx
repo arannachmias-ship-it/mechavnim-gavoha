@@ -50,6 +50,21 @@ async function setup() {
     kb.addEventListener("geometrychange", publish);
     kb.addEventListener("virtual-keyboard-toggle", publish);
     kb.layouts = buildLayout();
+    // משוב מישוש עדין בלחיצת מקש (אנדרואיד; iOS מתעלם בשקט)
+    document.addEventListener(
+      "pointerdown",
+      (e) => {
+        const t = e.target as HTMLElement | null;
+        if (t?.closest?.(".MLK__keycap, .ML__keyboard [data-command]")) {
+          try {
+            navigator.vibrate?.(8);
+          } catch {
+            /* ignore */
+          }
+        }
+      },
+      { passive: true, capture: true }
+    );
   }
   return ml;
 }
@@ -150,7 +165,7 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
     <div className="relative">
       <div ref={hostRef} className="min-h-[58px]" />
       {empty && placeholder && (
-        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400 text-base select-none" aria-hidden>
+        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-faint text-base select-none" aria-hidden>
           {placeholder}
         </span>
       )}

@@ -45,7 +45,7 @@ export function buildLayout(variables: string[] = []): { label: string; displayE
           { label: "6", latex: "6" },
           { label: "×", latex: "\\cdot" },
           { label: "√", insert: "\\sqrt{#0}" },
-          { label: "⌫", command: ["deleteBackward"], class: "action" },
+          { label: "⌫", command: ["deleteBackward"], class: "action w15" },
         ],
         [
           varKey(main[2]),
@@ -53,7 +53,8 @@ export function buildLayout(variables: string[] = []): { label: string; displayE
           { label: "1", latex: "1" },
           { label: "2", latex: "2" },
           { label: "3", latex: "3" },
-          { label: "−", latex: "-" },
+          /* המינוס של נגה: מקש כפול-רוחב, כהה ובולט – שלא יילחץ בטעות ולא יתפספס */
+          { label: "−", latex: "-", class: "w20 key-minus" },
           { label: "←", command: ["moveToPreviousChar"], class: "action" },
           { label: "→", command: ["moveToNextChar"], class: "action" },
           ...extra.map(varKey),

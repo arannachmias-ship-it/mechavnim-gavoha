@@ -30,7 +30,7 @@ export default function InstallHint() {
     setHidden(true);
   };
   return (
-    <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm flex items-start gap-3">
+    <div className="mt-6 rounded-2xl border border-primary/25 bg-primary-tint/70 p-3 text-sm flex items-start gap-3">
       <span className="text-2xl">📲</span>
       <div className="flex-1 space-y-1">
         <div className="font-bold">אפשר לשים את זה על מסך הבית – כמו אפליקציה.</div>
@@ -39,10 +39,12 @@ export default function InstallHint() {
             התקיני את האפליקציה
           </button>
         ) : ios ? (
-          <div className="text-slate-600">בספארי: לוחצים על כפתור השיתוף (הריבוע עם החץ למעלה) ← "הוסף למסך הבית".</div>
+          <div className="text-ink-soft">
+            הכי טוב <b>מכרום</b>: תפריט ⋯ ← "הוסף למסך הבית". (אם הספארי בטלפון עושה בעיות – הקיצור מכרום עוקף אותו.)
+          </div>
         ) : null}
       </div>
-      <button className="text-slate-400 text-lg leading-none" onClick={dismiss} aria-label="סגור">×</button>
+      <button className="text-faint text-lg leading-none" onClick={dismiss} aria-label="סגור">×</button>
     </div>
   );
 }

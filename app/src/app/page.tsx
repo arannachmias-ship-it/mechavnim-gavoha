@@ -20,32 +20,37 @@ export default function Home() {
   }
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8 bg-gradient-to-b from-amber-50 to-white">
+    <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
       <div className="text-center">
-        <div className="text-6xl mb-2">🚀</div>
+        <div className="mx-auto mb-3 w-20 h-20 rounded-[24px] flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" }} aria-hidden>
+          <svg width="40" height="40" viewBox="0 0 18 18" fill="none">
+            <line x1="2" y1="15" x2="16" y2="3" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+            <circle cx="9" cy="9" r="2.6" fill="#fff" />
+          </svg>
+        </div>
         <h1 className="text-3xl font-black">מכוונים גבוה</h1>
-        <p className="text-slate-700 mt-2 font-medium">אבא בנה לך את זה. השיטה כאן היא השיטה שלו.</p>
-        <p className="text-slate-500 text-sm mt-1">חתולים, מגנטים, ועד בית קומוניסטי – וגולאג</p>
+        <p className="text-ink-soft mt-2 font-medium">אבא בנה לך את זה. השיטה כאן היא השיטה שלו.</p>
+        <p className="text-muted text-sm mt-1">חתולים, מגנטים, ועד בית קומוניסטי – וגולאג</p>
       </div>
       <div className="grid gap-4 w-full max-w-sm">
-        <button onClick={() => login("noga")} disabled={busy} className="card text-right hover:shadow-md transition flex items-center gap-4 border-2 border-pink-200 hover:border-pink-400">
-          <span className="text-5xl">👩‍🎓</span>
+        <button onClick={() => login("noga")} disabled={busy} className="card text-right hover:shadow-md transition flex items-center gap-4 hover:!border-primary/40">
+          <span className="w-14 h-14 rounded-2xl bg-primary-tint text-primary-ink flex items-center justify-center text-2xl font-black shrink-0">נ</span>
           <div>
             <div className="text-2xl font-bold">נגה</div>
-            <div className="text-slate-500">בואי נתרגל</div>
+            <div className="text-muted">בואי נתרגל</div>
           </div>
         </button>
         {!pinMode ? (
-          <button onClick={() => setPinMode(true)} className="card text-right hover:shadow-md transition flex items-center gap-4 border-2 border-sky-200 hover:border-sky-400">
-            <span className="text-5xl">👨‍👧</span>
+          <button onClick={() => setPinMode(true)} className="card text-right hover:shadow-md transition flex items-center gap-4 hover:!border-primary/40">
+            <span className="w-14 h-14 rounded-2xl bg-topic-green text-topic-green-ink flex items-center justify-center text-2xl font-black shrink-0">א</span>
             <div>
               <div className="text-2xl font-bold">אבא</div>
-              <div className="text-slate-500">מסך מעקב (קוד)</div>
+              <div className="text-muted">מסך מעקב (קוד)</div>
             </div>
           </button>
         ) : (
           <form
-            className="card flex flex-col gap-3 border-2 border-sky-300"
+            className="card flex flex-col gap-3 !border-primary/30"
             onSubmit={(e) => {
               e.preventDefault();
               login("parent");
@@ -57,10 +62,10 @@ export default function Home() {
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className="border rounded-xl p-3 text-2xl tracking-widest text-center ltr"
+              className="border border-line rounded-2xl p-3 text-2xl tracking-widest text-center ltr bg-white"
               maxLength={24}
             />
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+            {err && <div className="text-error-ink text-sm">{err}</div>}
             <div className="flex gap-2">
               <button className="btn-primary flex-1" disabled={busy}>
                 מסך הורה
@@ -72,7 +77,7 @@ export default function Home() {
                 ביטול
               </button>
             </div>
-            <div className="text-xs text-slate-500">"לבדוק את האפליקציה" נכנס למסכים של נגה עם הקוד שלך – ושום תרגיל לא נרשם לה.</div>
+            <div className="text-xs text-muted">"לבדוק את האפליקציה" נכנס למסכים של נגה עם הקוד שלך – ושום תרגיל לא נרשם לה.</div>
           </form>
         )}
         <InstallHint />

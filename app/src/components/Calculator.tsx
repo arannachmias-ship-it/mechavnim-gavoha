@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { evalCalc } from "@/lib/calc";
 
 /**
- * 🧮 מחשבון מדעי-פשוט – נפתח כגיליון מעל התרגול, כדי שנגה לא תצא למחשבון של הטלפון (ותאבד את המקום).
+ * מחשבון מדעי-פשוט – נפתח כגיליון מעל התרגול, כדי שנגה לא תצא למחשבון של הטלפון (ותאבד את המקום).
  * מותר בבגרות 4 יח"ל: ארבע פעולות, סוגריים, חזקה, שורש. בלי טריגו – עוד לא.
  */
 export default function Calculator({ onUse, onInsert, compact = false }: { onUse?: () => void; onInsert?: (text: string) => void; compact?: boolean }) {
@@ -93,7 +93,7 @@ export default function Calculator({ onUse, onInsert, compact = false }: { onUse
   return (
     <>
       <button className={compact ? "btn-ghost text-sm px-2" : "btn-soft text-sm"} onClick={() => setOpen(true)} title="מחשבון">
-        🧮 מחשבון
+        מחשבון
       </button>
       {open &&
         typeof document !== "undefined" &&
@@ -101,7 +101,7 @@ export default function Calculator({ onUse, onInsert, compact = false }: { onUse
           <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setOpen(false)}>
             <div className="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="מחשבון">
               <div className="flex items-center gap-2 p-3 border-b">
-                <div className="font-bold flex-1">🧮 מחשבון</div>
+                <div className="font-bold flex-1">מחשבון</div>
                 <div className="text-xs text-slate-500">מותר בבגרות – בלי טריגו (עוד לא)</div>
                 <button className="btn-ghost px-2" onClick={() => setOpen(false)} aria-label="סגור">✕</button>
               </div>
@@ -163,7 +163,7 @@ export default function Calculator({ onUse, onInsert, compact = false }: { onUse
                     ⤴ להכניס {result.text} לשורה
                   </button>
                 )}
-                <div className="text-[11px] text-slate-400">המחשבון לחישוב – השיטה והשלבים עדיין שלך. הוא לא פותר משוואות ולא מכיר x.</div>
+                <div className="text-[11px] text-muted">המחשבון לחישוב – השיטה והשלבים עדיין שלך. הוא לא פותר משוואות ולא מכיר x.</div>
               </div>
             </div>
           </div>,

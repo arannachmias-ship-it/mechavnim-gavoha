@@ -1,28 +1,92 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-:root {
-  --background: #fffdf7;
-  --foreground: #1f2937;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+/* ===== אאורה — מערכת העיצוב (Tailwind 4, CSS-first) ===== */
+@theme {
+  /* דיו וטקסט */
+  --color-ink: #26264f;
+  --color-ink-soft: #4a4a72;
+  --color-muted: #68689a; /* תוקן מ-#7B7BA3 לקונטרסט 4.5:1 על canvas */
+  --color-faint: #8e8eb8; /* תוקן מ-#B6B6D2 – "דלג" חייב להישאר קריא */
+  /* רקע ומשטחים */
+  --color-canvas: #f3f3fc;
+  --color-surface: #ffffff;
+  --color-line: #e9e9f5;
+  /* ראשי — סגול */
+  --color-primary: #7c5cff;
+  --color-primary-deep: #5b5bd6;
+  --color-primary-ink: #6a4de8;
+  --color-primary-tint: #efebff;
+  /* מבטא — ליים */
+  --color-lime: #d6ff4b;
+  --color-lime-deep: #9be04b;
+  --color-lime-ink: #3d4a1e;
+  --color-lime-tint: #f2ffd1;
+  /* משוב */
+  --color-error: #e24e66;
+  --color-error-ink: #c43a52; /* טקסט שגיאה – קונטרסט מלא */
+  --color-error-tint: #fdedf0;
+  --color-warn: #f0a93b;
+  --color-warn-ink: #8a5a10;
+  --color-warn-tint: #fdf3e0;
+  --color-info: #5ce1ff;
+  /* גווני נושא */
+  --color-topic-violet: #efebff;
+  --color-topic-violet-ink: #6a4de8;
+  --color-topic-green: #e4f7ef;
+  --color-topic-green-ink: #2e7a57;
+  --color-topic-pink: #fdebf3;
+  --color-topic-pink-ink: #b5487a;
+  --color-topic-blue: #e9f3fd;
+  --color-topic-blue-ink: #3a7bbf;
+  --color-topic-sand: #fbf3e2;
+  --color-topic-sand-ink: #a07b2e;
+  /* טיפוגרפיה */
+  --font-sans: var(--font-rubik, "Rubik"), "Rubik", "Heebo", system-ui, -apple-system, sans-serif;
+  --font-math: Georgia, "Times New Roman", serif; /* מונוגרמות בלבד */
+  --text-title: 19px;
+  --text-hero: 44px;
+  --text-meta: 12.5px;
+  /* רדיוסים */
+  --radius-card: 28px;
+  --radius-inner: 18px;
+  --radius-field: 16px;
+  --radius-key: 14px;
+  --radius-pill: 999px;
+  /* צל */
+  --shadow-card: 0 8px 24px -12px rgb(38 38 79 / 0.18);
+  --shadow-dock: 0 -10px 30px -14px rgb(38 38 79 / 0.3);
+  --shadow-primary: 0 6px 16px -6px #7c5cff;
+  /* אנימציה */
+  --ease-pop: cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
 html { font-size: 17px; }
-/* רשת ביטחון: תרגיל ארוך שהחישוב לא הספיק לכווץ (למשל לפני שה-JS רץ) לא ידחוף את כל העמוד הצידה */
+/* רשת ביטחון: תרגיל ארוך שהחישוב לא הספיק לכווץ לא ידחוף את כל העמוד הצידה */
 html, body { overflow-x: hidden; max-width: 100vw; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Assistant", "Heebo", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
+/* הרקע החי: שכבה קבועה מאחורי הכול.
+   לא background-attachment: fixed – שבור ב-iOS/WebKit. */
+.aura-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--color-canvas);
+  background-image:
+    radial-gradient(circle at 12% 6%, rgb(124 92 255 / 0.22), transparent 42%),
+    radial-gradient(circle at 92% 26%, rgb(214 255 75 / 0.33), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgb(92 225 255 / 0.18), transparent 45%);
+}
+
+/* ===== מתמטיקה: איי LTR בתוך RTL (לא לגעת!) ===== */
 .katex { direction: ltr; unicode-bidi: isolate; font-size: 1.15em; }
 .math-line { direction: ltr; unicode-bidi: isolate; text-align: left; max-width: 100%; }
-/* katex ממרכז נוסחת-תצוגה כברירת מחדל; אצלנו זה תמיד מיושר משמאל, וגם כדי שכיווץ-להתאמה (Math.tsx) יעבוד נכון */
 .katex-display, .katex-display > .katex { text-align: left; }
 .ltr { direction: ltr; unicode-bidi: isolate; }
 
@@ -32,22 +96,116 @@ math-field {
   width: 100%;
   font-size: 1.5rem;
   padding: 10px 12px;
-  border: 2px solid #cbd5e1;
-  border-radius: 14px;
-  background: white;
-  --caret-color: #d97706;
-  --selection-background-color: #fde68a;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  --caret-color: #7c5cff;
+  --selection-background-color: #efebff;
 }
-math-field:focus-within { border-color: #f59e0b; outline: none; box-shadow: 0 0 0 3px #fde68a; }
+math-field:focus-within { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px rgb(124 92 255 / 0.25); }
 math-field::part(virtual-keyboard-toggle) { display: none; }
 math-field::part(menu-toggle) { display: none; }
 
-.card { @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-4; }
-.btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100; }
-.btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 bg-amber-500 text-white hover:bg-amber-600 shadow; }
-.btn-soft { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 bg-slate-100 text-slate-700 hover:bg-slate-200; }
-.btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 text-slate-600 hover:bg-slate-100; }
-.chip { @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold; }
+/* ===== רכיבים ===== */
+/* כרטיס זכוכית. שומר על ה-padding של .card הקודם. */
+.card {
+  background: rgb(255 255 255 / 0.68);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1rem;
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .card { background: rgb(255 255 255 / 0.92); }
+}
+/* כרטיס אטום זול – לשורות פנימיות בתוך גלילה (תקציב ה-blur: 3-4 שכבות למסך) */
+.card-solid {
+  background: rgb(255 255 255 / 0.85);
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: var(--radius-inner);
+  padding: 1rem;
+}
+
+.btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100; border-radius: var(--radius-field); }
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-bold text-white transition disabled:opacity-40;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  border-radius: var(--radius-field);
+  box-shadow: var(--shadow-primary);
+  min-height: 48px;
+  transition: transform 0.12s var(--ease-pop), box-shadow 0.12s, opacity 0.15s;
+}
+.btn-primary:active:not(:disabled) { transform: scale(0.96); }
+.btn-soft {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-bold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100;
+  background: var(--color-primary-tint);
+  color: var(--color-primary-ink);
+  border-radius: var(--radius-pill);
+}
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100;
+  color: var(--color-muted);
+  border-radius: var(--radius-pill);
+}
+.btn-ghost:hover { background: rgb(255 255 255 / 0.7); }
+
+/* צ'יפ – אטום כברירת מחדל (בלי blur; זכוכית רק לדוק ולכרטיסים ראשיים) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgb(255 255 255 / 0.85);
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* מדבקת נושא — מונוגרמה (תמיד LTR, בלי אמוג'י) */
+.monogram {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-math);
+  font-style: italic;
+  font-size: 12px;
+  font-weight: 700;
+  direction: ltr;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* דוק התרגול: סרגל קלט + מקלדת = בלוק צף אחד (radius עליון בלבד) */
+.dock {
+  background: rgb(255 255 255 / 0.8);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: var(--shadow-dock);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .dock { background: rgb(255 255 255 / 0.95); }
+}
+
+/* טקסט-גרדיאנט למספר הגדול */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* פוקוס נראה – מקלדת/נגישות */
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
 @keyframes pop { 0% { transform: scale(0.6); opacity: 0 } 70% { transform: scale(1.1); opacity: 1 } 100% { transform: scale(1) } }
 .animate-pop { animation: pop .35s ease-out both; }
@@ -56,9 +214,37 @@ math-field::part(menu-toggle) { display: none; }
 @keyframes floaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
 .animate-floaty { animation: floaty 2s ease-in-out infinite; }
 
-/* inline virtual keyboard host */
-/* MathLive virtual keyboard (standard bottom sheet). --kbh is published by MathField.tsx */
+/* ===== MathLive – מקלדת וירטואלית (bottom sheet). --kbh מפורסם מ-MathField.tsx ===== */
 :root { --kbh: 0px; }
-.ML__keyboard { --keycap-height: 46px; --keycap-font-size: 20px; --keycap-small-font-size: 14px; direction: ltr; z-index: 40; }
+.ML__keyboard {
+  --keycap-height: 48px;
+  --keycap-font-size: 20px;
+  --keycap-small-font-size: 14px;
+  --keycap-gap: 7px;
+  --keycap-border-radius: 14px;
+  --keyboard-background: rgb(243 243 252 / 0.96);
+  --keycap-background: rgb(255 255 255 / 0.92);
+  --keycap-background-hover: #efebff;
+  --keycap-background-pressed: #e3dcff;
+  --keycap-text: #26264f;
+  --keycap-secondary-background: #efebff;
+  --keycap-secondary-background-hover: #e3dcff;
+  --keycap-secondary-text: #6a4de8;
+  --keycap-primary-background: #7c5cff;
+  --keycap-primary-background-hover: #5b5bd6;
+  --keycap-primary-text: #ffffff;
+  direction: ltr;
+  z-index: 40;
+}
+.ML__keyboard .MLK__keycap { border-radius: 14px; box-shadow: 0 1px 2px rgb(38 38 79 / 0.08); }
+.ML__keyboard .MLK__keycap:active, .ML__keyboard .MLK__keycap.is-pressed { transform: scale(0.94); }
+/* מינוס — מקש כהה, גדול, בולט (הממצא של נגה: לחצה עליו בטעות/פספסה אותו) */
+.ML__keyboard .key-minus {
+  background: #26264f !important;
+  color: #d6ff4b !important;
+  font-size: 24px !important;
+  border-radius: 14px;
+}
+.ML__keyboard .key-minus:active { background: #1b1b3a !important; }
 .input-bar { bottom: var(--kbh, 0px); transition: bottom .12s ease; }
 html.kb-open main { padding-bottom: calc(10rem + var(--kbh)); }

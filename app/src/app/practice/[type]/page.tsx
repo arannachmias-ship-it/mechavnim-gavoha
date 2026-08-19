@@ -13,6 +13,7 @@ import { xpFor } from "@/lib/progress";
 import TopBar from "@/components/TopBar";
 import { Math as M, RichText, Txt } from "@/components/MathText";
 import MathField, { type MathFieldHandle } from "@/components/MathField";
+import LevelRing from "@/components/LevelRing";
 import FormulaSheet from "@/components/FormulaSheet";
 import CoordPlot from "@/components/CoordPlot";
 import Calculator from "@/components/Calculator";
@@ -458,43 +459,38 @@ export default function PracticePage() {
 
   return (
     <>
-      <TopBar tester={profile === "tester"} summary={summary} back={isCustom ? "/photo" : `/learn/${topicId}`} title={`🎯 ${typeInfo.title}`} />
+      <TopBar tester={profile === "tester"} summary={summary} back={isCustom ? "/photo" : `/learn/${topicId}`} title={typeInfo.title} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-40 space-y-3">
         <div className="flex items-center gap-2 text-sm">
           <button
-            className="chip bg-slate-100 hover:bg-slate-200 transition"
+            className="chip transition hover:bg-primary-tint"
             onClick={() => setShowLevelInfo(true)}
             title="איך עולים ויורדים רמה?"
             aria-label="הסבר על הרמות"
           >
             רמה {"⭐".repeat(level)}
-            {level < 3 && (
-              <span className="mr-1 font-mono tracking-tight" aria-label={`${cleanRun} מתוך 3 נקיים ברצף`}>
-                <span className="text-emerald-600">{"●".repeat(cleanRun)}</span>
-                <span className="text-slate-300">{"○".repeat(Math.max(0, 3 - cleanRun))}</span>
-              </span>
-            )}
-            {level >= 3 && <span className="mr-1 text-emerald-700 text-xs">מקס</span>}
-            <span className="mr-1 text-slate-400">ⓘ</span>
+            {level < 3 && <LevelRing cleanRun={cleanRun} />}
+            {level >= 3 && <span className="mr-1 text-lime-ink text-xs">מקס</span>}
+            <span className="mr-1 text-muted">ⓘ</span>
           </button>
-          <span className="chip bg-slate-100">היום בסשן: {sessionCount}</span>
-          {stageInfo && !done && <span className="chip bg-amber-100 text-amber-800 truncate">שלב: <Txt s={stageInfo.name} /></span>}
+          <span className="chip">היום בסשן: {sessionCount}</span>
+          {stageInfo && !done && <span className="chip bg-primary-tint text-primary-ink border-primary-tint truncate">שלב: <Txt s={stageInfo.name} /></span>}
         </div>
 
         {levelNote && !done && (
-          <div className={`rounded-xl px-3 py-2 text-sm flex items-start gap-2 animate-pop ${levelNote.kind === "up" ? "bg-emerald-50 text-emerald-900 border border-emerald-200" : "bg-sky-50 text-sky-900 border border-sky-200"}`}>
-            <span>{levelNote.kind === "up" ? "⬆️" : "⬇️"}</span>
+          <div className={`rounded-2xl px-3 py-2 text-sm flex items-start gap-2 animate-pop ${levelNote.kind === "up" ? "bg-lime-tint text-lime-ink border border-lime-deep/40" : "bg-primary-tint text-primary-ink border border-primary/25"}`}>
+            <span className="font-black">{levelNote.kind === "up" ? "↑" : "↓"}</span>
             <span className="flex-1">{levelNote.text}</span>
             <button className="text-xs opacity-60 hover:opacity-100" onClick={() => setLevelNote(null)} aria-label="סגור">✕</button>
           </div>
         )}
         {!done && ex && level < 3 && (hintsUsed > 0 || reveals > 0 || wrongCount > 0) && (
-          <div className="text-xs text-slate-500 -mt-1">התרגיל הזה כבר לא נחשב &quot;נקי&quot; ({hintsUsed > 0 ? "רמז" : reveals > 0 ? "הצגת צעד" : "טעות"}) – הרצף לרמה הבאה מתחיל מחדש בתרגיל הבא. זה בסדר, ככה לומדים.</div>
+          <div className="text-xs text-muted -mt-1">התרגיל הזה כבר לא נחשב &quot;נקי&quot; ({hintsUsed > 0 ? "רמז" : reveals > 0 ? "הצגת צעד" : "טעות"}) – הרצף לרמה הבאה מתחיל מחדש בתרגיל הבא. זה בסדר, ככה לומדים.</div>
         )}
 
         {showLevelInfo && (
           <div className="fixed inset-0 z-30 bg-black/40 flex items-end sm:items-center justify-center p-3" onClick={() => setShowLevelInfo(false)}>
-            <div className="bg-white rounded-2xl p-4 max-w-md w-full space-y-3 shadow-xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="איך עולים רמה">
+            <div className="bg-white rounded-[28px] p-4 max-w-md w-full space-y-3 shadow-xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="איך עולים רמה">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-lg">איך עולים ויורדים רמה?</h3>
                 <button className="btn-ghost text-sm" onClick={() => setShowLevelInfo(false)}>סגור</button>
@@ -503,23 +499,23 @@ export default function PracticePage() {
                 <p>
                   יש 3 רמות קושי לכל סוג תרגיל: <b>⭐ ⭐⭐ ⭐⭐⭐</b>. את עכשיו ברמה <b>{level}</b>{level < 3 ? ` – ${cleanRun} מתוך 3 נקיים ברצף.` : " – הרמה הכי גבוהה."}
                 </p>
-                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
-                  <div className="font-semibold text-emerald-900">⬆️ עולים רמה</div>
-                  <div className="text-emerald-900/90">
-                    <b>שלושה תרגילים &quot;נקיים&quot; ברצף</b>. נקי = פתרת נכון <b>בלי רמז, בלי &quot;הצג את הצעד&quot;, ובלי אף שורה אדומה</b>. הנקודות הירוקות ליד הרמה סופרות לך את הרצף.
+                <div className="rounded-2xl bg-lime-tint border border-lime-deep/40 p-3">
+                  <div className="font-semibold text-lime-ink">↑ עולים רמה</div>
+                  <div className="text-lime-ink/90">
+                    <b>שלושה תרגילים &quot;נקיים&quot; ברצף</b>. נקי = פתרת נכון <b>בלי רמז, בלי &quot;הצג את הצעד&quot;, ובלי אף שורה אדומה</b>. הטבעת ליד הרמה מתמלאת עם הרצף.
                   </div>
                 </div>
-                <div className="rounded-xl bg-sky-50 border border-sky-200 p-3">
-                  <div className="font-semibold text-sky-900">⬇️ יורדים רמה</div>
-                  <div className="text-sky-900/90">
+                <div className="rounded-2xl bg-primary-tint border border-primary/25 p-3">
+                  <div className="font-semibold text-primary-ink">↓ יורדים רמה</div>
+                  <div className="text-primary-ink/90">
                     רק בשני מקרים: <b>4 טעויות (שורות אדומות) או יותר בתרגיל אחד</b> – התרגיל הבא יהיה רמה אחת למטה. או אם <b>דילגת</b> על תרגיל. רמז או טעות אחת לא מורידים רמה – הם רק מאפסים את הרצף.
                   </div>
                 </div>
-                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3">
-                  <div className="font-semibold text-amber-900">🚪 מאיפה מתחילים</div>
-                  <div className="text-amber-900/90">כשנכנסים לתרגול מתחילים ברמה שבה סיימת בפעם הקודמת. ואם השליטה שלך בנושא גבוהה (מעל 80% בתרגילים האחרונים) – מתחילים רמה אחת גבוה יותר.</div>
+                <div className="rounded-2xl bg-warn-tint border border-warn/40 p-3">
+                  <div className="font-semibold text-warn-ink">מאיפה מתחילים</div>
+                  <div className="text-warn-ink/90">כשנכנסים לתרגול מתחילים ברמה שבה סיימת בפעם הקודמת. ואם השליטה שלך בנושא גבוהה (מעל 80% בתרגילים האחרונים) – מתחילים רמה אחת גבוה יותר.</div>
                 </div>
-                <p className="text-slate-600">
+                <p className="text-ink-soft">
                   הרמה לא ציון – היא רק קובעת כמה קשה התרגיל הבא. רמה גבוהה = יותר נקודות ⭐ לכל תרגיל ({"10/20/30"} לרמות 1/2/3), פחות אם השתמשת ברמזים.
                 </p>
               </div>
@@ -528,8 +524,8 @@ export default function PracticePage() {
         )}
 
         {ex && (
-          <div className={`card border-2 ${done ? "border-emerald-300 bg-emerald-50" : "border-amber-200"}`}>
-            <div className="text-slate-600 text-sm mb-1"><Txt s={ex.instruction} /></div>
+          <div className={`card ${done ? "!bg-lime-tint/80 !border-lime-deep/50" : ""}`}>
+            <div className="text-ink-soft text-sm mb-1"><Txt s={ex.instruction} /></div>
             <div className="text-2xl sm:text-3xl py-2">
               <M latex={ex.promptLatex} block />
             </div>
@@ -538,8 +534,8 @@ export default function PracticePage() {
                 {ex.asks && ex.asks.length > 0 && (
                   <ul className="text-sm space-y-1" aria-label="מה מחפשים">
                     {geoChecklist(ex, history).map((c) => (
-                      <li key={c.key} className={`flex items-start gap-2 ${c.done ? "text-emerald-700" : "text-slate-700"}`}>
-                        <span className="shrink-0">{c.done ? "✅" : "⬜"}</span>
+                      <li key={c.key} className={`flex items-start gap-2 ${c.done ? "text-lime-ink" : "text-ink-soft"}`}>
+                        <span className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-black ${c.done ? "bg-lime text-lime-ink" : "border border-line text-transparent"}`}>✓</span>
                         <span className={c.done ? "line-through opacity-70" : ""}><Txt s={c.label} /></span>
                       </li>
                     ))}
@@ -552,8 +548,8 @@ export default function PracticePage() {
         )}
 
         {resumed && !done && (
-          <div className="rounded-xl bg-sky-50 border border-sky-200 p-2 text-sm text-sky-900 flex items-center gap-2">
-            <span>↩️ המשכנו מאיפה שעצרת – מה שכתבת שמור.</span>
+          <div className="rounded-2xl bg-primary-tint border border-primary/25 p-2 text-sm text-primary-ink flex items-center gap-2">
+            <span>↩ המשכנו מאיפה שעצרת – מה שכתבת שמור.</span>
             <button
               className="btn-ghost text-xs mr-auto"
               onClick={() => {
@@ -571,7 +567,7 @@ export default function PracticePage() {
           <div className="card space-y-2">
             {history.map((h, i) => (
               <div key={i} className="flex items-center gap-2 animate-pop">
-                <span className="text-emerald-600">✔</span>
+                <span className="w-5 h-5 rounded-full bg-lime text-lime-ink flex items-center justify-center text-xs font-black shrink-0">✓</span>
                 <div className="text-xl flex-1">
                   <M latex={h.replace(/כל x/g, "\\text{כל } x").replace(/אין פתרון/g, "\\text{אין פתרון}")} block />
                 </div>
@@ -582,11 +578,11 @@ export default function PracticePage() {
 
         {/* feedback */}
         {result && !done && (
-          <div key={shake} className={`rounded-xl p-3 text-sm leading-relaxed ${result.warn ? "bg-amber-50 text-amber-900 border border-amber-200" : result.status === "ok" ? "bg-emerald-50 text-emerald-800" : result.status === "wrong" || result.status === "unparsable" ? "bg-red-50 text-red-800 animate-shake" : "bg-slate-50 text-slate-700"}`}>
-            <Txt s={result.status === "ok" && !result.message.startsWith("👀") ? `✔ ${result.message}` : result.message} />
+          <div key={shake} className={`rounded-2xl p-3 text-sm leading-relaxed ${result.warn ? "bg-warn-tint text-warn-ink border border-warn/40" : result.status === "ok" ? "bg-lime-tint text-lime-ink" : result.status === "wrong" || result.status === "unparsable" ? "bg-error-tint text-error-ink animate-shake" : "bg-white/70 text-ink-soft"}`}>
+            <Txt s={result.status === "ok" && !result.message.startsWith("👀") ? `✓ ${result.message}` : result.message} />
             {result.warn && (
               <div className="mt-1 font-medium">
-                ⚠️ <Txt s={result.warn} />
+                ⚠ <Txt s={result.warn} />
               </div>
             )}
           </div>
@@ -596,13 +592,13 @@ export default function PracticePage() {
         {!done && ex && (
           <div className="space-y-2">
             {hintLevel >= 1 && stageInfo && (
-              <div className="rounded-xl p-3 bg-sky-50 text-sky-900 animate-pop">
-                💡 <b><Txt s={stageInfo.name} />:</b> <RichText text={stageInfo.hint1} />
+              <div className="rounded-2xl p-3 bg-primary-tint/70 text-primary-ink animate-pop">
+                <b><Txt s={stageInfo.name} />:</b> <RichText text={stageInfo.hint1} />
               </div>
             )}
             {hintLevel >= 2 && stageInfo && (
-              <div className="rounded-xl p-3 bg-violet-50 text-violet-900 animate-pop">
-                💡💡 <RichText text={stageInfo.hint2} />
+              <div className="rounded-2xl p-3 bg-primary-tint text-primary-ink border border-primary/25 animate-pop">
+                <RichText text={stageInfo.hint2} />
               </div>
             )}
           </div>
@@ -610,40 +606,42 @@ export default function PracticePage() {
 
         {/* done */}
         {done && ex && (
-          <div className="card border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-white animate-pop space-y-3">
-            <div className={`font-black ${praise?.tier === "milestone" ? "text-3xl text-pink-700" : praise?.tier === "hard" ? "text-2xl text-emerald-700" : "text-xl text-emerald-700"}`}>
-              {praise?.tier === "milestone" ? "💖 " : praise?.tier === "hard" ? "🎉 " : "✔ "}
+          <div className="card !bg-gradient-to-br !from-lime-tint !to-white !border-lime-deep/50 animate-pop space-y-3">
+            <div className={`font-black flex items-center gap-2 ${praise?.tier === "milestone" ? "text-3xl text-topic-pink-ink" : praise?.tier === "hard" ? "text-2xl text-lime-ink" : "text-xl text-lime-ink"}`}>
+              <span className="w-8 h-8 rounded-full bg-lime text-lime-ink flex items-center justify-center text-lg shrink-0">✓</span>
               {praise?.head ?? "נכון."}
             </div>
-            {praise?.sub && <div className="text-slate-700 text-sm leading-relaxed">{praise.sub}</div>}
+            {praise?.sub && <div className="text-ink-soft text-sm leading-relaxed">{praise.sub}</div>}
             {levelNote?.kind === "up" && (
-              <div className="rounded-xl bg-emerald-100 border border-emerald-300 px-3 py-2 text-emerald-900 font-semibold animate-pop">⬆️ {levelNote.text}</div>
+              <div className="rounded-2xl bg-lime-tint border border-lime-deep/50 px-3 py-2 text-lime-ink font-semibold animate-pop">↑ {levelNote.text}</div>
             )}
             {!levelNote && level < 3 && (
-              <div className="text-xs text-slate-500">
-                רצף נקי לרמה הבאה: <span className="text-emerald-600 font-mono">{"●".repeat(cleanRun)}</span>
-                <span className="text-slate-300 font-mono">{"○".repeat(Math.max(0, 3 - cleanRun))}</span>
-                {cleanRun === 0 && (hintsUsed > 0 || reveals > 0 || wrongCount > 0) ? " – התחיל מחדש (היה רמז/טעות). התרגיל הבא נקי – וזה 1." : cleanRun > 0 ? ` – עוד ${3 - cleanRun} ועולים.` : ""}
+              <div className="text-xs text-muted flex items-center gap-1.5">
+                <LevelRing cleanRun={cleanRun} size={16} />
+                <span>
+                  רצף נקי לרמה הבאה: {cleanRun}/3
+                  {cleanRun === 0 && (hintsUsed > 0 || reveals > 0 || wrongCount > 0) ? " – התחיל מחדש (היה רמז/טעות). התרגיל הבא נקי – וזה 1." : cleanRun > 0 ? ` – עוד ${3 - cleanRun} ועולים.` : ""}
+                </span>
               </div>
             )}
             <div className="flex items-center gap-3">
-              <span className="chip bg-amber-100 text-amber-800 text-base">+{xpGain} ⭐</span>
-              {wrongCount > 0 && !praise?.sub && <span className="text-sm text-slate-500">({wrongCount} {wrongCount === 1 ? "ניסיון" : "ניסיונות"} בדרך – זה חלק מהעניין)</span>}
+              <span className="chip !bg-lime !text-lime-ink !border-lime text-base">+{xpGain} ⭐</span>
+              {wrongCount > 0 && !praise?.sub && <span className="text-sm text-muted">({wrongCount} {wrongCount === 1 ? "ניסיון" : "ניסיונות"} בדרך – זה חלק מהעניין)</span>}
             </div>
             {showSummary && (
-              <div className="rounded-xl bg-white/70 border border-emerald-200 p-2 text-sm text-slate-700">
+              <div className="rounded-2xl bg-white/70 border border-lime-deep/40 p-2 text-sm text-ink-soft">
                 {sessionSummary(sessionCount, sessionWrong)}
                 <button className="btn-ghost text-xs mr-2" onClick={() => setShowSummary(false)}>סגור</button>
               </div>
             )}
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-ink-soft">
               תשובה סופית: <M latex={ex.finalLatex} />
               {ex.kind === "equation" && Array.isArray(ex.solutions) && " – כדאי להציב חזרה במקור ולבדוק."}
             </div>
             <div className="flex gap-2">
               {isCustom ? (
                 <Link href="/photo" className="btn-primary flex-1 text-lg text-center" autoFocus>
-                  📷 לצלם עוד ←
+                  לצלם עוד ←
                 </Link>
               ) : (
                 <button className="btn-primary flex-1 text-lg" onClick={next} autoFocus>
@@ -659,7 +657,7 @@ export default function PracticePage() {
 
         {/* input area – fixed bottom */}
         {!done && ex && (
-          <div className="input-bar fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t p-3 z-10">
+          <div className="input-bar dock fixed bottom-0 inset-x-0 p-3 z-10">
             <div className="max-w-3xl mx-auto space-y-2">
               <div className="flex items-center gap-2">
                 <div className="flex-1">
@@ -682,10 +680,10 @@ export default function PracticePage() {
               </div>
               <div className="flex gap-2 items-center flex-wrap">
                 <button className="btn-soft text-sm" onClick={askHint} disabled={hintLevel >= 2}>
-                  💡 {hintLevel === 0 ? "רמז" : hintLevel === 1 ? "רמז חזק" : "אין עוד רמזים"}
+                  {hintLevel === 0 ? "רמז" : hintLevel === 1 ? "רמז חזק" : "אין עוד רמזים"}
                 </button>
                 <button className="btn-soft text-sm" onClick={revealStep} disabled={hintLevel < 2}>
-                  👀 הצג את הצעד
+                  הצג את הצעד
                 </button>
                 <FormulaSheet />
                 <Calculator onUse={() => setCalcUses((c) => c + 1)} onInsert={(t) => fieldRef.current?.insert?.(t)} />
@@ -709,12 +707,12 @@ export default function PracticePage() {
                     </button>
                   </>
                 )}
-                <button className="btn-ghost text-sm mr-auto" onClick={() => setShowFinal((s) => !s)} title="דלגי על התרגיל">
+                <button className="btn-ghost text-sm mr-auto !text-faint" onClick={() => setShowFinal((s) => !s)} title="דלגי על התרגיל">
                   דלג
                 </button>
               </div>
               {showFinal && (
-                <div className="text-sm text-slate-600 flex items-center gap-2">
+                <div className="text-sm text-ink-soft flex items-center gap-2">
                   <span>לדלג? התרגיל יירשם כלא-פתור.</span>
                   <button
                     className="btn-soft text-xs"

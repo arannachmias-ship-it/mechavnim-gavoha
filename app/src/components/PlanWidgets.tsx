@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { Plan, PlanTask } from "@/lib/plan";
 import { KIND_LABEL, topicOf, typeTitle } from "@/lib/plan";
+import Monogram from "@/components/Monogram";
 
 /** 🎯 רכיבי התוכנית – משותפים למסך הראשי, למסך התוכנית ולמסך ההורה */
 
@@ -23,21 +24,25 @@ export function TaskRow({ t, linky = true, compact = false }: { t: PlanTask; lin
   const partial = !done && t.done > 0;
   const inner = (
     <>
-      <span className={`text-2xl ${compact ? "" : "w-9 text-center"}`}>{done ? "✅" : topic?.emoji ?? "📘"}</span>
+      {done ? (
+        <span className="w-[34px] h-[34px] rounded-xl bg-lime text-lime-ink flex items-center justify-center font-black shrink-0">✓</span>
+      ) : (
+        <Monogram topicId={t.topicId} />
+      )}
       <div className="flex-1 min-w-0">
-        <div className={`font-semibold leading-tight truncate ${done ? "text-emerald-800" : ""}`}>
+        <div className={`font-semibold leading-tight truncate ${done ? "text-lime-ink" : ""}`}>
           {typeTitle(t.typeId)}
-          <span className="text-slate-400 font-normal text-xs mr-1">· {topic?.title.split(" – ")[0]}</span>
+          <span className="text-muted font-normal text-xs mr-1">· {topic?.title.split(" – ")[0]}</span>
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-muted">
           {KIND_LABEL[t.kind]} · {t.exercises} תרגילים · ~{t.minutes} דק׳
-          {partial && <span className="text-amber-700 font-semibold"> · {t.done}/{t.exercises} ✔</span>}
+          {partial && <span className="text-primary-ink font-semibold"> · {t.done}/{t.exercises} ✓</span>}
         </div>
       </div>
       {linky && !done && <span className="btn-soft text-xs px-3 py-1.5 shrink-0">{partial ? "להמשיך" : "להתחיל"}</span>}
     </>
   );
-  const cls = `flex items-center gap-3 rounded-xl px-3 py-2 border ${done ? "bg-emerald-50 border-emerald-200" : partial ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200"} ${linky && !done ? "hover:border-amber-400 transition" : ""}`;
+  const cls = `flex items-center gap-3 rounded-2xl px-3 py-2 border ${done ? "bg-lime-tint border-lime-deep/40" : partial ? "bg-primary-tint/60 border-primary/25" : "bg-white/85 border-white"} ${linky && !done ? "hover:border-primary/40 transition" : ""}`;
   if (linky && !done)
     return (
       <Link href={`/practice/${t.typeId}`} className={cls}>
@@ -54,15 +59,15 @@ export function ReadinessBar({ p }: { p: Plan }) {
   const apct = p.totalTypes ? Math.round((almost / p.totalTypes) * 100) : 0;
   return (
     <div>
-      <div className="flex justify-between text-xs text-slate-600 mb-1">
+      <div className="flex justify-between text-xs text-ink-soft mb-1">
         <span>מוכנות למבחן</span>
         <span>
-          <b className="text-emerald-700">{p.readyTypes}</b>/{p.totalTypes} סוגי תרגילים מוכנים{almost ? ` · ${almost} כמעט` : ""}
+          <b className="text-lime-ink">{p.readyTypes}</b>/{p.totalTypes} סוגי תרגילים מוכנים{almost ? ` · ${almost} כמעט` : ""}
         </span>
       </div>
-      <div className="h-3 rounded-full bg-slate-100 overflow-hidden flex" dir="rtl">
-        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
-        <div className="h-full bg-amber-300 transition-all" style={{ width: `${apct}%` }} />
+      <div className="h-3 rounded-full bg-line overflow-hidden flex" dir="rtl">
+        <div className="h-full bg-lime-deep transition-all" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-primary/40 transition-all" style={{ width: `${apct}%` }} />
       </div>
     </div>
   );
@@ -76,30 +81,32 @@ export function PlanHomeCard({ p }: { p: Plan }) {
   const total = p.todayTasks.reduce((s, t) => s + t.exercises, 0);
   const doneEx = p.todayTasks.reduce((s, t) => s + Math.min(t.done, t.exercises), 0);
   return (
-    <section className={`card border-2 space-y-2 ${p.status === "done" ? "border-emerald-300 bg-emerald-50" : "border-rose-200 bg-rose-50/60"}`}>
+    <section className={`card space-y-2 ${p.status === "done" ? "!bg-lime-tint/80 !border-lime-deep/50" : "!border-primary/30"}`}>
       <div className="flex items-center gap-2">
-        <span className="text-2xl">🎯</span>
+        <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white font-black text-sm" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" }} aria-hidden>
+          {p.status === "exam_passed" ? "✓" : p.daysLeft}
+        </span>
         <div className="flex-1 min-w-0">
           <div className="font-bold leading-tight">הדרך ל-{examDateHe(p.examDate)}</div>
-          <div className="text-xs text-slate-600">{countdownText(p)}{p.status !== "exam_passed" && total ? ` · היום: ${doneEx}/${total} תרגילים` : ""}</div>
+          <div className="text-xs text-ink-soft">{countdownText(p)}{p.status !== "exam_passed" && total ? ` · היום: ${doneEx}/${total} תרגילים` : ""}</div>
         </div>
         <Link href="/plan" className="btn-ghost text-xs">
           התוכנית המלאה ←
         </Link>
       </div>
       {p.status === "exam_passed" ? null : todayOff ? (
-        <div className="text-sm text-slate-600">היום יום חופש בתוכנית. אם בא לך בכל זאת – כל תרגיל נספר 🙂</div>
+        <div className="text-sm text-ink-soft">היום יום חופש בתוכנית. אם בא לך בכל זאת – כל תרגיל נספר 🙂</div>
       ) : p.status === "done" ? (
-        <div className="text-sm text-emerald-800 font-semibold">סיימת את מה שתוכנן להיום ✔ כל דבר מעבר זה בונוס.</div>
+        <div className="text-sm text-lime-ink font-semibold">סיימת את מה שתוכנן להיום ✓ כל דבר מעבר זה בונוס.</div>
       ) : (
         <div className="space-y-1.5">
           {open.slice(0, 3).map((t) => (
             <TaskRow key={t.typeId} t={t} compact />
           ))}
-          {open.length > 3 && <div className="text-xs text-slate-500">ועוד {open.length - 3}…</div>}
+          {open.length > 3 && <div className="text-xs text-muted">ועוד {open.length - 3}…</div>}
         </div>
       )}
-      {p.settings.note && <div className="text-xs text-slate-600 border-t pt-2">💬 אבא: {p.settings.note}</div>}
+      {p.settings.note && <div className="text-xs text-ink-soft border-t border-line pt-2">💬 אבא: {p.settings.note}</div>}
     </section>
   );
 }

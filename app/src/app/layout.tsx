@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
+
+/* רוביק בעברית – מוגש מהדומיין שלנו (next/font מוריד בזמן build), לא מ-Google בזמן ריצה */
+const rubik = Rubik({ subsets: ["hebrew", "latin"], variable: "--font-rubik", display: "swap" });
 
 export const metadata: Metadata = {
   title: "מכוונים גבוה – נגה",
@@ -14,12 +18,13 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, themeColor: "#f59e0b", viewportFit: "cover" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, themeColor: "#F3F3FC", viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className="h-full antialiased">
+    <html lang="he" dir="rtl" className={`h-full antialiased ${rubik.variable}`}>
       <body className="min-h-full flex flex-col">
+        <div className="aura-bg" aria-hidden />
         <PwaRegister />
         {children}
       </body>

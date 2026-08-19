@@ -23,19 +23,19 @@ export default function TopicPage() {
 
   return (
     <>
-      <TopBar formulas tester={profile === "tester"} summary={summary} back="/learn" title={`${topic.emoji} ${topic.title}`} />
+      <TopBar formulas tester={profile === "tester"} summary={summary} back="/learn" title={topic.title} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-24 space-y-4">
-        <p className="text-slate-600"><Txt s={topic.subtitle} /></p>
+        <p className="text-ink-soft"><Txt s={topic.subtitle} /></p>
 
-        <div className="flex gap-2 sticky top-[52px] z-10 bg-[var(--background)] py-1">
+        <div className="flex gap-2 sticky top-[52px] z-10 py-1" style={{ background: "rgb(243 243 252 / 0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: 999 }}>
           {(
             [
-              ["method", "📖 השיטה"],
-              ["example", "✍️ דוגמה"],
-              ["video", "🎥 סרטונים"],
+              ["method", "השיטה"],
+              ["example", "דוגמה"],
+              ["video", "סרטונים"],
             ] as const
           ).map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} className={`chip flex-1 justify-center py-2 ${tab === k ? "bg-amber-500 text-white" : "bg-white border"}`}>
+            <button key={k} onClick={() => setTab(k)} className={`chip flex-1 justify-center py-2 ${tab === k ? "!text-white !border-transparent" : ""}`} style={tab === k ? { background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" } : undefined}>
               {label}
             </button>
           ))}
@@ -47,7 +47,7 @@ export default function TopicPage() {
             {topic.plot && (
               <div className="card flex flex-col items-center gap-1">
                 <CoordPlot spec={topic.plot} size={240} />
-                <div className="text-xs text-slate-500">קודם הציור, אחר-כך הנוסחה.</div>
+                <div className="text-xs text-muted">קודם הציור, אחר-כך הנוסחה.</div>
               </div>
             )}
             {topic.cards.map((c, i) => (
@@ -67,18 +67,18 @@ export default function TopicPage() {
 
         {tab === "example" && (
           <div className="card space-y-3">
-            <div className="text-slate-500 text-sm">דוגמה פתורה – לחצי "הבא" כדי לראות צעד-צעד</div>
-            <div className="text-2xl bg-slate-50 rounded-xl p-3">
+            <div className="text-muted text-sm">דוגמה פתורה – לחצי "הבא" כדי לראות צעד-צעד</div>
+            <div className="text-2xl bg-primary-tint/50 rounded-2xl p-3">
               <M latex={topic.example.prompt} block />
             </div>
             <div className="space-y-2">
               {topic.example.steps.slice(0, exStep).map((s, i) => (
-                <div key={i} className="animate-pop flex gap-3 items-start border-r-4 border-amber-300 pr-3">
+                <div key={i} className="animate-pop flex gap-3 items-start border-r-4 border-primary/40 pr-3">
                   <div className="flex-1">
                     <div className="text-xl">
                       <M latex={s.latex} block />
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-ink-soft">
                       <RichText text={s.note} />
                     </div>
                   </div>
@@ -98,7 +98,7 @@ export default function TopicPage() {
 
         {tab === "video" && (
           <div className="space-y-4">
-            {topic.videoIds.length === 0 && <div className="card text-slate-500">לנושא הזה עדיין אין סרטון של אבא – יש הסבר ודוגמה 🙂</div>}
+            {topic.videoIds.length === 0 && <div className="card text-muted">לנושא הזה עדיין אין סרטון של אבא – יש הסבר ודוגמה 🙂</div>}
             {topic.videoIds.map((v) => (
               <div key={v.id} className="card p-2">
                 <div className="aspect-video rounded-xl overflow-hidden bg-black">
@@ -110,13 +110,13 @@ export default function TopicPage() {
           </div>
         )}
 
-        <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t p-3">
+        <div className="dock fixed bottom-0 inset-x-0 p-3">
           <div className="max-w-3xl mx-auto flex gap-2 overflow-x-auto">
             {topic.types.map((ty) => {
               const tp = summary?.types[ty.id];
               return (
                 <Link key={ty.id} href={`/practice/${ty.id}`} className="btn-primary flex-1 whitespace-nowrap flex-col gap-0 py-2">
-                  <span>🎯 תרגול: <Txt s={ty.title} /></span>
+                  <span>תרגול: <Txt s={ty.title} /></span>
                   <span className="text-xs font-normal opacity-90">
                     <Txt s={ty.short} />
                     {tp && tp.attempts > 0 ? ` · ${"★".repeat(tp.stars)}` : ""}

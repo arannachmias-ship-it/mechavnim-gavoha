@@ -3,6 +3,22 @@ import Link from "next/link";
 import type { Summary } from "@/lib/progress";
 import FormulaSheet from "@/components/FormulaSheet";
 
+/** הלוגו הקטן: מונוגרמת קו-שיפוע על גרדיאנט הסגול (מחליף את 🚀) */
+function Logo() {
+  return (
+    <span
+      className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+      style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" }}
+      aria-hidden
+    >
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+        <line x1="2" y1="15" x2="16" y2="3" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+        <circle cx="9" cy="9" r="2.6" fill="#fff" />
+      </svg>
+    </span>
+  );
+}
+
 export default function TopBar({
   summary,
   back,
@@ -21,17 +37,17 @@ export default function TopBar({
   refreshing?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-amber-100">
-      {tester && <div className="bg-violet-600 text-white text-center text-xs py-1">🧪 מצב בדיקה (אבא) – שום דבר לא נרשם לנגה</div>}
+    <header className="sticky top-0 z-20 border-b border-line" style={{ background: "rgb(243 243 252 / 0.82)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+      {tester && <div className="text-white text-center text-xs py-1" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" }}>🧪 מצב בדיקה (אבא) – שום דבר לא נרשם לנגה</div>}
       <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-3">
         {back ? (
           <Link href={back} className="btn-ghost px-2 text-xl" aria-label="חזרה">
             →
           </Link>
         ) : (
-          <span className="text-2xl">🚀</span>
+          <Logo />
         )}
-        <div className="flex-1 font-bold truncate">{title ?? "מכוונים גבוה"}</div>
+        <div className="flex-1 font-extrabold truncate text-[19px]">{title ?? "מכוונים גבוה"}</div>
         {onRefresh && (
           <button
             onClick={onRefresh}
@@ -40,16 +56,16 @@ export default function TopBar({
             aria-label="רענון"
             title="רענון נתונים"
           >
-            <span className={refreshing ? "inline-block animate-spin" : "inline-block"}>🔄</span>
+            <span className={refreshing ? "inline-block animate-spin" : "inline-block"}>↻</span>
           </button>
         )}
         {formulas && <FormulaSheet compact />}
         {summary && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="chip bg-amber-100 text-amber-800" title="נקודות">
+            <span className="chip" title="נקודות">
               ⭐ {summary.xp}
             </span>
-            <span className="chip bg-orange-100 text-orange-800" title="רצף ימים">
+            <span className="chip" title="רצף ימים">
               🔥 {summary.streak}
             </span>
           </div>

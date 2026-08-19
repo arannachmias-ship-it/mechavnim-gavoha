@@ -18,13 +18,13 @@ export default function FormulaSheet({ compact = false }: { compact?: boolean })
   return (
     <>
       <button className={compact ? "btn-ghost text-sm px-2" : "btn-soft text-sm"} onClick={() => setOpen(true)} title="נוסחאון 4 יח״ל">
-        📄 נוסחאון
+        נוסחאון
       </button>
       {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setOpen(false)}>
           <div className="bg-white w-full max-w-2xl max-h-[88vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 p-3 border-b">
-              <div className="font-bold flex-1">📄 נוסחאון – 4 יח״ל</div>
+              <div className="font-bold flex-1">נוסחאון – 4 יח״ל</div>
               <label className="text-xs text-slate-500 flex items-center gap-1">
                 <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} /> הכול (גם מה שעוד לא למדנו)
               </label>
