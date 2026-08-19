@@ -22,6 +22,8 @@ export interface AttemptRow {
   first_input_sec: number | null;
   /** exercise was skipped (נטישה) */
   skipped: boolean;
+  /** כמה פעמים לחצה "=" במחשבון של האפליקציה במהלך התרגיל */
+  calc_uses: number;
   created_at: string;
 }
 
@@ -59,6 +61,7 @@ async function ensureSchema() {
   await sql`CREATE INDEX IF NOT EXISTS attempts_profile_idx ON attempts(profile, created_at)`;
   await sql`ALTER TABLE attempts ADD COLUMN IF NOT EXISTS first_input_sec INT`;
   await sql`ALTER TABLE attempts ADD COLUMN IF NOT EXISTS skipped BOOLEAN NOT NULL DEFAULT false`;
+  await sql`ALTER TABLE attempts ADD COLUMN IF NOT EXISTS calc_uses INT NOT NULL DEFAULT 0`;
   await sql`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
   ensured = true;
 }
@@ -70,8 +73,8 @@ export async function insertAttempt(a: NewAttempt): Promise<void> {
     return;
   }
   await ensureSchema();
-  await sql`INSERT INTO attempts (profile, type_id, topic_id, level, correct, hints, reveals, wrong_lines, duration_sec, lines, prompt, mistakes, first_input_sec, skipped)
-    VALUES (${a.profile}, ${a.type_id}, ${a.topic_id}, ${a.level}, ${a.correct}, ${a.hints}, ${a.reveals}, ${a.wrong_lines}, ${a.duration_sec}, ${JSON.stringify(a.lines)}, ${a.prompt}, ${JSON.stringify(a.mistakes)}, ${a.first_input_sec}, ${a.skipped})`;
+  await sql`INSERT INTO attempts (profile, type_id, topic_id, level, correct, hints, reveals, wrong_lines, duration_sec, lines, prompt, mistakes, first_input_sec, skipped, calc_uses)
+    VALUES (${a.profile}, ${a.type_id}, ${a.topic_id}, ${a.level}, ${a.correct}, ${a.hints}, ${a.reveals}, ${a.wrong_lines}, ${a.duration_sec}, ${JSON.stringify(a.lines)}, ${a.prompt}, ${JSON.stringify(a.mistakes)}, ${a.first_input_sec}, ${a.skipped}, ${a.calc_uses})`;
 }
 
 export async function deleteAttempts(profile: string): Promise<number> {
@@ -98,6 +101,7 @@ export async function listAttempts(profile: string, limit = 2000): Promise<Attem
     mistakes: typeof r.mistakes === "string" ? JSON.parse(r.mistakes) : (r.mistakes ?? []),
     first_input_sec: r.first_input_sec ?? null,
     skipped: !!r.skipped,
+    calc_uses: Number(r.calc_uses ?? 0),
   }));
 }
 

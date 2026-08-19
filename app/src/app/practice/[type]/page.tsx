@@ -15,6 +15,7 @@ import { Math as M, RichText, Txt } from "@/components/MathText";
 import MathField, { type MathFieldHandle } from "@/components/MathField";
 import FormulaSheet from "@/components/FormulaSheet";
 import CoordPlot from "@/components/CoordPlot";
+import Calculator from "@/components/Calculator";
 import { geoChecklist } from "@/lib/math/geo";
 import { PRAISE_NORMAL, PRAISE_HARD, PRAISE_MILESTONE, AFTER_STRUGGLE, Rotator, sessionSummary } from "@/content/voice";
 import { saveResume, loadResume, clearResume, SESSION_MAX_AGE_MS, type ResumeState } from "@/lib/resume";
@@ -83,6 +84,8 @@ export default function PracticePage() {
   /** שקיפות הרמה: מה קרה לרמה ולמה, וחלון "איך עולים רמה?" */
   const [levelNote, setLevelNote] = useState<{ kind: "up" | "down"; text: string } | null>(null);
   const [showLevelInfo, setShowLevelInfo] = useState(false);
+  /** 🧮 כמה פעמים חישבה במחשבון של האפליקציה בתרגיל הזה (נרשם למסך ההורה) */
+  const [calcUses, setCalcUses] = useState(0);
 
   useEffect(() => {
     if (error === "unauth") router.replace("/");
@@ -148,6 +151,7 @@ export default function PracticePage() {
           setHistory(restore.history);
           setResult(last);
           setHintLevel(restore.hintLevel);
+          setCalcUses(restore.calcUses ?? 0);
           setHintsUsed(restore.hintsUsed);
           setReveals(restore.reveals);
           setWrongCount(restore.wrongCount);
@@ -169,6 +173,7 @@ export default function PracticePage() {
       setResult(null);
       setHintLevel(0);
       setHintsUsed(0);
+      setCalcUses(0);
       setReveals(0);
       setWrongCount(0);
       setMistakes([]);
@@ -256,9 +261,10 @@ export default function PracticePage() {
       sessionCount,
       sessionWrong,
       cleanRun,
+      calcUses,
       finished: done,
     });
-  }, [ex, typeId, typeInfo, level, isCustom, history, hintLevel, hintsUsed, reveals, wrongCount, mistakes, sessionCount, sessionWrong, cleanRun, done, activeMs]);
+  }, [ex, typeId, typeInfo, level, isCustom, history, hintLevel, hintsUsed, reveals, wrongCount, mistakes, sessionCount, sessionWrong, cleanRun, calcUses, done, activeMs]);
   persistRef.current = persist;
   useEffect(() => {
     persist();
@@ -353,6 +359,7 @@ export default function PracticePage() {
       lines: hist.slice(-40),
       prompt: exercise.promptLatex.slice(0, 500),
       mistakes,
+      calc_uses: calcUses,
     }).then(reload);
     // adaptive level – עולים אחרי 3 תרגילים נקיים ברצף (בלי רמז, בלי הצגת צעד, בלי טעות)
     if (nextClean >= 3 && level < 3) {
@@ -681,6 +688,7 @@ export default function PracticePage() {
                   👀 הצג את הצעד
                 </button>
                 <FormulaSheet />
+                <Calculator onUse={() => setCalcUses((c) => c + 1)} onInsert={(t) => fieldRef.current?.insert?.(t)} />
                 {ex.kind === "fracdomain" && (
                   <button className="btn-ghost text-sm" onClick={() => fieldRef.current?.insert?.("x\\ne")} title="תחום הצבה">
                     x≠
@@ -711,7 +719,7 @@ export default function PracticePage() {
                   <button
                     className="btn-soft text-xs"
                     onClick={() => {
-                      logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round(activeMs() / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current) }).then(reload);
+                      logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round(activeMs() / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, calc_uses: calcUses, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current) }).then(reload);
                       setSessionWrong((w) => w + wrongCount);
                       const lv = level > 1 ? level - 1 : 1;
                       setLevelNote(lv < level ? { kind: "down", text: `דילגת – ירדנו לרמה ${lv}. שלושה נקיים ברצף ומטפסים חזרה.` } : null);

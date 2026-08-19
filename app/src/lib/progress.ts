@@ -43,6 +43,9 @@ export interface Summary {
     byPosition: { label: string; count: number; accuracy: number; hintRate: number }[]; // position within a session (gap 25 min)
     todayWrong: number; // wrong lines today
     sessions: number;
+    /** 🧮 המחשבון של האפליקציה: כמה תרגילים עם שימוש, ומתוך כמה */
+    calcExercises: number;
+    calcTotalUses: number;
   };
 }
 
@@ -193,9 +196,11 @@ export function summarize(rows: AttemptRow[], now = new Date()): Summary {
   }
   const byPosition = buckets.filter((b) => b.count > 0).map((b) => ({ label: b.label, count: b.count, accuracy: b.correct / b.count, hintRate: b.hints / b.count }));
   const todayWrong = rows.filter((r) => dayKey(new Date(r.created_at)) === dayKey(now)).reduce((s, r) => s + r.wrong_lines, 0);
+  const calcExercises = rows.filter((r) => (r.calc_uses ?? 0) > 0).length;
+  const calcTotalUses = rows.reduce((s, r) => s + (r.calc_uses ?? 0), 0);
 
   return {
-    analytics: { avgDurationSec, avgFirstInputSec, skipped, byHour, byPosition, todayWrong, sessions },
+    analytics: { avgDurationSec, avgFirstInputSec, skipped, byHour, byPosition, todayWrong, sessions, calcExercises, calcTotalUses },
     xp,
     level,
     streak,

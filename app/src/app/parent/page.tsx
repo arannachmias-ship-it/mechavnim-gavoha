@@ -64,12 +64,13 @@ export default function ParentPage() {
         <section className="card">
           <h2 className="font-bold mb-1">איך היא עובדת – הנתונים שסיכמנו לאסוף</h2>
           <div className="text-xs text-slate-500 mb-3">זמן לתרגיל · היסוס (זמן עד ההקלדה הראשונה) · רמזים · סוג טעות · אורך רצף · שעה ביום · נטישה. אחרי כמה שבועות נדע כמה תרגילים ברצף לפני שהיא מתעייפת, ובאיזו שעה היא הכי חדה.</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
             {[
               ["⏱ זמן ממוצע לתרגיל", an.avgDurationSec ? `${an.avgDurationSec}s` : "—"],
               ["🤔 היסוס ממוצע", an.avgFirstInputSec !== null ? `${an.avgFirstInputSec}s` : "—"],
               ["🚪 נטישות (דילוגים)", an.skipped],
               ["🗓 מפגשים", an.sessions],
+              ["🧮 מחשבון", summary.totalAttempts ? `${an.calcExercises}/${summary.totalAttempts} תרגילים · ${an.calcTotalUses} חישובים` : "—"],
             ].map(([l, v]) => (
               <div key={String(l)} className="rounded-xl bg-slate-50 p-2 text-center">
                 <div className="text-xl font-black text-slate-800">{v}</div>
@@ -206,7 +207,7 @@ export default function ParentPage() {
                     {new Date(r.created_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })} · {r.type_id === "custom" ? "📷 מהצילום" : (ALL_TYPES.find((t) => t.id === r.type_id)?.title ?? r.type_id)} · רמה {r.level}
                   </span>
                   <span>
-                    {r.skipped ? "🚪 דילגה" : r.correct ? "✔" : "✘"} · {r.duration_sec}s{typeof r.first_input_sec === "number" ? ` · 🤔${r.first_input_sec}s` : ""} · 💡{r.hints} · 👀{r.reveals} · ✘{r.wrong_lines}
+                    {r.skipped ? "🚪 דילגה" : r.correct ? "✔" : "✘"} · {r.duration_sec}s{typeof r.first_input_sec === "number" ? ` · 🤔${r.first_input_sec}s` : ""} · 💡{r.hints} · 👀{r.reveals} · ✘{r.wrong_lines}{r.calc_uses ? ` · 🧮${r.calc_uses}` : ""}
                     {r.mistakes?.length ? ` · ${[...new Set(r.mistakes)].map((m) => MISTAKE_LABELS[m]?.split(" (")[0] ?? m).join(", ")}` : ""}
                   </span>
                 </div>

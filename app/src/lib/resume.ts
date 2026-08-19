@@ -26,6 +26,8 @@ export interface ResumeState {
   sessionCount: number;
   sessionWrong: number;
   cleanRun: number;
+  /** לחיצות "=" במחשבון בתרגיל הזה */
+  calcUses?: number;
   /** התרגיל כבר נפתר – לשחזר רק את המונים, ולבנות תרגיל חדש */
   finished?: boolean;
   savedAt: number;

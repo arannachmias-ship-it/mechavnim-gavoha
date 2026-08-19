@@ -17,6 +17,7 @@ const schema = z.object({
   mistakes: z.array(z.string()).max(20),
   first_input_sec: z.number().int().min(0).max(3600).nullable().optional(),
   skipped: z.boolean().optional(),
+  calc_uses: z.number().int().min(0).max(999).optional(),
 });
 
 export async function POST(req: Request) {
@@ -25,6 +26,6 @@ export async function POST(req: Request) {
   if (profile !== "noga") return NextResponse.json({ ok: false }, { status: 401 });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ ok: false, error: "bad body" }, { status: 400 });
-  await insertAttempt({ ...parsed.data, first_input_sec: parsed.data.first_input_sec ?? null, skipped: parsed.data.skipped ?? false, profile });
+  await insertAttempt({ ...parsed.data, first_input_sec: parsed.data.first_input_sec ?? null, skipped: parsed.data.skipped ?? false, calc_uses: parsed.data.calc_uses ?? 0, profile });
   return NextResponse.json({ ok: true });
 }
