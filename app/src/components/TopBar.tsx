@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Summary } from "@/lib/progress";
 import FormulaSheet from "@/components/FormulaSheet";
 
-/** הלוגו הקטן: מונוגרמת קו-שיפוע על גרדיאנט הסגול (מחליף את 🚀) */
+/** הלוגו הקטן: העקומה העולה עם נקודת הליים – גרסת ה-SVG של הלוגו החדש */
 function Logo() {
   return (
     <span
@@ -11,9 +11,9 @@ function Logo() {
       style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" }}
       aria-hidden
     >
-      <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-        <line x1="2" y1="15" x2="16" y2="3" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-        <circle cx="9" cy="9" r="2.6" fill="#fff" />
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+        <path d="M3.4 15 C4.6 10.6 6.1 8.4 7.1 9.2 C8 9.9 8.1 11.3 9.2 10.4 C10.3 9.5 11.6 7.1 13.1 5" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" />
+        <circle cx="13.6" cy="4.4" r="1.5" fill="#D6FF4B" />
       </svg>
     </span>
   );

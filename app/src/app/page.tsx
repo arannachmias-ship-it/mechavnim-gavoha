@@ -23,9 +23,9 @@ export default function Home() {
     <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
       <div className="text-center">
         <div className="mx-auto mb-3 w-20 h-20 rounded-[24px] flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))" }} aria-hidden>
-          <svg width="40" height="40" viewBox="0 0 18 18" fill="none">
-            <line x1="2" y1="15" x2="16" y2="3" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-            <circle cx="9" cy="9" r="2.6" fill="#fff" />
+          <svg width="42" height="42" viewBox="0 0 18 18" fill="none">
+            <path d="M3.4 15 C4.6 10.6 6.1 8.4 7.1 9.2 C8 9.9 8.1 11.3 9.2 10.4 C10.3 9.5 11.6 7.1 13.1 5" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" />
+            <circle cx="13.6" cy="4.4" r="1.5" fill="#D6FF4B" />
           </svg>
         </div>
         <h1 className="text-3xl font-black">מכוונים גבוה</h1>
