@@ -15,6 +15,7 @@ import { Math as M, RichText, Txt } from "@/components/MathText";
 import MathField, { type MathFieldHandle } from "@/components/MathField";
 import LevelRing from "@/components/LevelRing";
 import FormulaSheet from "@/components/FormulaSheet";
+import MethodSheet from "@/components/MethodSheet";
 import CoordPlot from "@/components/CoordPlot";
 import Calculator from "@/components/Calculator";
 import { geoChecklist } from "@/lib/math/geo";
@@ -705,6 +706,7 @@ export default function PracticePage() {
                 <button className="btn-soft text-sm" onClick={revealStep} disabled={hintLevel < 2}>
                   הצג את הצעד
                 </button>
+                {!isCustom && <MethodSheet topicId={topicId} />}
                 <FormulaSheet />
                 <Calculator onUse={() => setCalcUses((c) => c + 1)} onInsert={(t) => fieldRef.current?.insert?.(t)} />
                 {ex.kind === "fracdomain" && (
