@@ -3,12 +3,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TOPICS, ALL_TYPES } from "@/content/topics";
 import { MISTAKE_LABELS } from "@/lib/progress";
-import { useProgress } from "@/lib/client";
+import { useProgress, usePlan } from "@/lib/client";
 import TopBar from "@/components/TopBar";
 import { Math as M, Txt } from "@/components/MathText";
 import AnthropicKeyCard from "@/components/AnthropicKeyCard";
 import InterviewCard from "@/components/InterviewCard";
 import PlanCard from "@/components/PlanCard";
+import ParentPulse from "@/components/ParentPulse";
 
 const heat = (m: number, attempts: number) => {
   if (!attempts) return "bg-slate-100 text-slate-400";
@@ -20,6 +21,7 @@ const heat = (m: number, attempts: number) => {
 
 export default function ParentPage() {
   const { summary, error, reload } = useProgress();
+  const { plan } = usePlan();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
@@ -56,6 +58,8 @@ export default function ParentPage() {
             </div>
           ))}
         </section>
+
+        <ParentPulse plan={plan} summary={summary} />
 
         <PlanCard />
 

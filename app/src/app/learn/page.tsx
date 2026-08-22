@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TOPICS, RECOMMENDED_PATH, BADGES } from "@/content/topics";
 import { useProgress, usePlan } from "@/lib/client";
-import { PlanHomeCard } from "@/components/PlanWidgets";
+import MissionHero, { DadNote } from "@/components/MissionHero";
 import TopBar from "@/components/TopBar";
 import Monogram from "@/components/Monogram";
 import { Txt, Math as M } from "@/components/MathText";
@@ -39,6 +39,9 @@ export default function LearnHome() {
     <>
       <TopBar formulas tester={profile === "tester"} summary={summary} title="היי נגה" />
       <main className="max-w-3xl mx-auto w-full p-4 pb-16 space-y-5">
+        {plan && <MissionHero p={plan} />}
+        {plan && <DadNote note={plan.settings.note} />}
+
         {summary && (
           <section className="grid grid-cols-3 gap-2">
             <div className="card text-center py-3" title={`דרגה לפי נקודות ⭐. יש לך ${summary.xp}, הדרגה הבאה ב-${25 * summary.level * summary.level}.`}>
@@ -55,8 +58,6 @@ export default function LearnHome() {
             </div>
           </section>
         )}
-
-        {plan && <PlanHomeCard p={plan} />}
 
         {resume && (
           <section className="card !bg-primary-tint/80 !border-primary/25 space-y-2">
