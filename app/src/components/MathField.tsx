@@ -6,7 +6,8 @@ import { buildLayout } from "@/lib/math/keyboard";
 export interface MathFieldHandle {
   getValue: () => string;
   setValue: (latex: string) => void;
-  focus: () => void;
+  /** keyboard:false – ממקדים את השדה בלי לפתוח את המקלדת (מצב שבו נגה עוד קוראת את התרגיל) */
+  focus: (opts?: { keyboard?: boolean }) => void;
   clear: () => void;
   insert: (latex: string) => void;
 }
@@ -73,6 +74,8 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
   const hostRef = useRef<HTMLDivElement>(null);
   const mfRef = useRef<MathfieldElement | null>(null);
   const [empty, setEmpty] = useState(true);
+  /** פוקוס "שקט": השדה מקבל את הסמן, אבל המקלדת לא נפתחת מעצמה */
+  const silentRef = useRef(false);
   const onEnterRef = useRef(onEnter);
   const onChangeRef = useRef(onChange);
   onEnterRef.current = onEnter;
@@ -85,7 +88,13 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       mfRef.current?.setValue(v);
       setEmpty(!v.trim());
     },
-    focus: () => mfRef.current?.focus(),
+    focus: (opts?: { keyboard?: boolean }) => {
+      silentRef.current = opts?.keyboard === false;
+      mfRef.current?.focus();
+      setTimeout(() => {
+        silentRef.current = false;
+      }, 0);
+    },
     clear: () => {
       mfRef.current?.setValue("");
       setEmpty(true);
@@ -128,7 +137,9 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       mfRef.current = mf;
       const kb = vkb();
       void keyboardHostId; // (legacy) the keyboard is now MathLive's standard bottom-sheet – reliable on phones
-      mf.addEventListener("focusin", () => kb.show());
+      mf.addEventListener("focusin", () => {
+        if (!silentRef.current) kb.show();
+      });
       mf.addEventListener("focusout", () => {
         setTimeout(() => {
           if (document.activeElement !== mf) kb.hide();
@@ -151,6 +162,11 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
           e.preventDefault();
           onEnterRef.current?.();
         }
+      });
+      // נגיעה בשדה תמיד פותחת את המקלדת – גם אם השדה כבר ממוקד (ואז focusin לא נורה שוב)
+      hostRef.current.addEventListener("pointerdown", () => {
+        silentRef.current = false;
+        setTimeout(() => kb.show(), 0);
       });
       if (autoFocus) setTimeout(() => mf?.focus(), 50);
     });

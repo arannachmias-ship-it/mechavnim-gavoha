@@ -36,6 +36,8 @@ export function buildLayout(variables: string[] = []): { label: string; displayE
           { label: "÷", insert: "\\frac{#@}{#?}" },
           { label: "(", latex: "(" },
           { label: ")", latex: ")" },
+          /* סגירת המקלדת – בלעדיו היא נשארת פתוחה ומסתירה את התרגיל */
+          { label: "⌄", command: ["hideVirtualKeyboard"], class: "action key-hide-kb" },
         ],
         [
           { latex: "#@^{2}", label: "x²", insert: "#@^{2}" },

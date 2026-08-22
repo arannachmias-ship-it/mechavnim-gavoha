@@ -248,3 +248,11 @@ math-field::part(menu-toggle) { display: none; }
 .ML__keyboard .key-minus:active { background: #1b1b3a !important; }
 .input-bar { bottom: var(--kbh, 0px); transition: bottom .12s ease; }
 html.kb-open main { padding-bottom: calc(10rem + var(--kbh)); }
+
+/* מקש סגירת המקלדת – ברור ונפרד משאר המקשים, שלא ייראה כמו תו מתמטי */
+.ML__keyboard .key-hide-kb {
+  background: #e9e6ff !important;
+  color: #5b4bd6 !important;
+  font-size: 22px !important;
+  font-weight: 700;
+}

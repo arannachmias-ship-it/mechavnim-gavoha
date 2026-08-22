@@ -77,6 +77,7 @@ export default function PracticePage() {
   const customRawRef = useRef<string | null>(null);
   const [resumed, setResumed] = useState(false);
   const fieldRef = useRef<MathFieldHandle>(null);
+  const liveEndRef = useRef<HTMLDivElement>(null);
   const levelInit = useRef(false);
   const rot = useRef(new Rotator());
   const [sessionWrong, setSessionWrong] = useState(0);
@@ -164,7 +165,7 @@ export default function PracticePage() {
           resetTime(restore.activeMs);
           setResumed(true);
           if (restore.draft) setTimeout(() => fieldRef.current?.setValue(restore!.draft), 80);
-          setTimeout(() => fieldRef.current?.focus(), 140);
+          setTimeout(() => fieldRef.current?.focus({ keyboard: false }), 140);
           return;
         }
       }
@@ -185,11 +186,30 @@ export default function PracticePage() {
       firstInputRef.current = null;
       resetTime(0);
       fieldRef.current?.clear();
-      setTimeout(() => fieldRef.current?.focus(), 100);
+      // תרגיל חדש נפתח בלי מקלדת – שנגה תראה אותו במלואו; המקלדת נפתחת כשהיא נוגעת בשדה
+      setTimeout(() => fieldRef.current?.focus({ keyboard: false }), 100);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [typeId, isCustom, reviveCustom, resetTime]
   );
+
+  /** כשהמקלדת נפתחת היא מכסה את החלק התחתון – גוללים כדי שהתרגיל יישאר מול העיניים */
+  useEffect(() => {
+    const root = document.documentElement;
+    const keepVisible = () => {
+      if (!root.classList.contains("kb-open")) return;
+      requestAnimationFrame(() => {
+        const anchor = liveEndRef.current;
+        const dock = document.querySelector(".input-bar");
+        if (!anchor || !dock) return;
+        const overlap = anchor.getBoundingClientRect().bottom - dock.getBoundingClientRect().top;
+        if (overlap > 0) window.scrollBy({ top: overlap + 12, behavior: "smooth" });
+      });
+    };
+    const obs = new MutationObserver(keepVisible);
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
 
   /** מתחילים: אם יש תרגיל שנקטע – ממשיכים ממנו; אחרת תרגיל חדש ברמה המתאימה */
   const start = useCallback(
@@ -577,6 +597,7 @@ export default function PracticePage() {
         )}
 
         {/* feedback */}
+        <div ref={liveEndRef} aria-hidden />
         {result && !done && (
           <div key={shake} className={`rounded-2xl p-3 text-sm leading-relaxed ${result.warn ? "bg-warn-tint text-warn-ink border border-warn/40" : result.status === "ok" ? "bg-lime-tint text-lime-ink" : result.status === "wrong" || result.status === "unparsable" ? "bg-error-tint text-error-ink animate-shake" : "bg-white/70 text-ink-soft"}`}>
             <Txt s={result.status === "ok" && !result.message.startsWith("👀") ? `✓ ${result.message}` : result.message} />
@@ -666,7 +687,6 @@ export default function PracticePage() {
                     variables={kbVars}
                     placeholder="השורה הבאה…"
                     onEnter={submit}
-                    autoFocus
                     keyboardHostId="kb-host"
                     onChange={() => {
                       if (firstInputRef.current === null) firstInputRef.current = Math.round(activeMs() / 1000);
