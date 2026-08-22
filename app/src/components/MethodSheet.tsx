@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TOPIC_BY_ID } from "@/content/topics";
 import { Math as M, RichText, Txt } from "@/components/MathText";
@@ -9,18 +9,36 @@ import { Math as M, RichText, Txt } from "@/components/MathText";
  * והסרטונים נמצאים במסך אחר – וקל לפספס שהם שם. זה אותו תוכן, בחלון צף,
  * בלי לצאת מהתרגיל ובלי לאבד את מה שכבר נכתב.
  */
-export default function MethodSheet({ topicId }: { topicId: string }) {
+export default function MethodSheet({ topicId, push = false, onPushShown }: { topicId: string; push?: boolean; onPushShown?: () => void }) {
   const topic = TOPIC_BY_ID[topicId];
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"method" | "example" | "video">("method");
   const [exStep, setExStep] = useState(0);
+  /** מצב "כניסה ראשונה": נפתח מעצמו, ויוצאים ממנו עם כפתור שמוביל לתרגיל */
+  const [pushed, setPushed] = useState(false);
+  const shownRef = useRef(false);
+
+  useEffect(() => {
+    if (!push || shownRef.current) return;
+    shownRef.current = true;
+    setTab("method");
+    setOpen(true);
+    setPushed(true);
+    onPushShown?.();
+  }, [push, onPushShown]);
+
+  /** סוגרים – ויוצאים ממצב "כניסה ראשונה", כדי שפתיחה ידנית אחר-כך תיראה רגילה */
+  const close = useCallback(() => {
+    setOpen(false);
+    setPushed(false);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, close]);
 
   if (!topic) return null;
 
@@ -32,13 +50,16 @@ export default function MethodSheet({ topicId }: { topicId: string }) {
       {open &&
         typeof document !== "undefined" &&
         createPortal(
-          <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setOpen(false)}>
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={close}>
             <div className="bg-white w-full max-w-2xl max-h-[88vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-2 p-3 border-b border-line">
-                <div className="font-bold flex-1 truncate">
-                  <Txt s={topic.title} />
+                <div className="flex-1 min-w-0">
+                  {pushed && <div className="text-xs text-primary-ink font-semibold">פעם ראשונה בנושא הזה – ככה זה עובד</div>}
+                  <div className="font-bold truncate">
+                    <Txt s={topic.title} />
+                  </div>
                 </div>
-                <button className="btn-ghost px-2" onClick={() => setOpen(false)} aria-label="סגור">
+                <button className="btn-ghost px-2" onClick={close} aria-label="סגור">
                   ✕
                 </button>
               </div>
@@ -132,6 +153,15 @@ export default function MethodSheet({ topicId }: { topicId: string }) {
                   </div>
                 )}
               </div>
+
+              {pushed && (
+                <div className="border-t border-line p-3 flex items-center gap-2">
+                  <button className="btn-primary flex-1" onClick={close}>
+                    קדימה לתרגיל ←
+                  </button>
+                  <div className="text-xs text-muted flex-1">אפשר לפתוח את זה שוב בכפתור ״השיטה״ בכל רגע.</div>
+                </div>
+              )}
             </div>
           </div>,
           document.body

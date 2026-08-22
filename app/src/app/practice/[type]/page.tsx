@@ -16,6 +16,7 @@ import MathField, { type MathFieldHandle } from "@/components/MathField";
 import LevelRing from "@/components/LevelRing";
 import FormulaSheet from "@/components/FormulaSheet";
 import MethodSheet from "@/components/MethodSheet";
+import { shouldPushMethod } from "@/lib/method";
 import CoordPlot from "@/components/CoordPlot";
 import Calculator from "@/components/Calculator";
 import { geoChecklist } from "@/lib/math/geo";
@@ -193,6 +194,26 @@ export default function PracticePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [typeId, isCustom, reviveCustom, resetTime]
   );
+
+  /** כניסה ראשונה לנושא: פותחים את השיטה לפני התרגיל הראשון, פעם אחת */
+  const methodSeenKey = `mg_method_seen_${topicId}`;
+  const [methodSeen, setMethodSeen] = useState(true); // מניחים "כבר נראה" עד שקראנו – שלא יקפוץ לרגע
+  useEffect(() => {
+    try {
+      setMethodSeen(localStorage.getItem(methodSeenKey) === "1");
+    } catch {
+      setMethodSeen(true);
+    }
+  }, [methodSeenKey]);
+  const markMethodSeen = useCallback(() => {
+    try {
+      localStorage.setItem(methodSeenKey, "1");
+    } catch {
+      /* ignore */
+    }
+    setMethodSeen(true);
+  }, [methodSeenKey]);
+  const pushMethod = shouldPushMethod({ summary, topicId, isCustom, alreadySeen: methodSeen });
 
   /** כשהמקלדת נפתחת היא מכסה את החלק התחתון – גוללים כדי שהתרגיל יישאר מול העיניים */
   useEffect(() => {
@@ -706,7 +727,7 @@ export default function PracticePage() {
                 <button className="btn-soft text-sm" onClick={revealStep} disabled={hintLevel < 2}>
                   הצג את הצעד
                 </button>
-                {!isCustom && <MethodSheet topicId={topicId} />}
+                {!isCustom && <MethodSheet topicId={topicId} push={pushMethod} onPushShown={markMethodSeen} />}
                 <FormulaSheet />
                 <Calculator onUse={() => setCalcUses((c) => c + 1)} onInsert={(t) => fieldRef.current?.insert?.(t)} />
                 {ex.kind === "fracdomain" && (
