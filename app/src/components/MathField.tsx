@@ -34,6 +34,9 @@ type VKB = {
 };
 const vkb = () => (window as unknown as { mathVirtualKeyboard: VKB }).mathVirtualKeyboard;
 
+/** כמה זמן אחרי focus שקט עדיין לא פותחים את המקלדת */
+const SILENT_MS = 900;
+
 let configured = false;
 async function setup() {
   const ml = await import("mathlive");
@@ -75,8 +78,12 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
   const hostRef = useRef<HTMLDivElement>(null);
   const mfRef = useRef<MathfieldElement | null>(null);
   const [empty, setEmpty] = useState(true);
-  /** פוקוס "שקט": השדה מקבל את הסמן, אבל המקלדת לא נפתחת מעצמה */
-  const silentRef = useRef(false);
+  /**
+   * פוקוס "שקט": השדה מקבל את הסמן, אבל המקלדת לא נפתחת מעצמה.
+   * חלון זמן ולא דגל רגעי – MathLive יורה focusin גם באיחור (למשל אחרי setValue
+   * כשמשחזרים תרגיל שנקטע), ואז דגל שהתאפס כבר פתח את המקלדת על אמצע המסך.
+   */
+  const silentUntilRef = useRef(0);
   /** מתי נלחץ ↵ במקלדת – רק change שנגרר ממנו נחשב "בדקי לי את השורה" */
   const commitAtRef = useRef(0);
   const onEnterRef = useRef(onEnter);
@@ -92,17 +99,15 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       setEmpty(!v.trim());
     },
     focus: (opts?: { keyboard?: boolean }) => {
-      silentRef.current = opts?.keyboard === false;
+      silentUntilRef.current = opts?.keyboard === false ? Date.now() + SILENT_MS : 0;
       mfRef.current?.focus();
-      setTimeout(() => {
-        silentRef.current = false;
-      }, 0);
     },
     clear: () => {
       mfRef.current?.setValue("");
       setEmpty(true);
     },
     insert: (v: string) => {
+      silentUntilRef.current = 0; // הכנסה מהמחשבון = היא ממשיכה להקליד, המקלדת נפתחת
       mfRef.current?.focus();
       mfRef.current?.insert(v);
     },
@@ -142,7 +147,8 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       const kb = vkb();
       void keyboardHostId; // (legacy) the keyboard is now MathLive's standard bottom-sheet – reliable on phones
       mf.addEventListener("focusin", () => {
-        if (!silentRef.current) kb.show();
+        if (Date.now() < silentUntilRef.current) return;
+        kb.show();
       });
       mf.addEventListener("focusout", () => {
         setTimeout(() => {
@@ -182,7 +188,7 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
       });
       // נגיעה בשדה תמיד פותחת את המקלדת – גם אם השדה כבר ממוקד (ואז focusin לא נורה שוב)
       hostRef.current.addEventListener("pointerdown", () => {
-        silentRef.current = false;
+        silentUntilRef.current = 0;
         setTimeout(() => kb.show(), 0);
       });
       // מקש ה-↵ של המקלדת המתמטית – מסמנים כוונה מפורשת לשליחה

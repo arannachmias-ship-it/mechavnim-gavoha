@@ -8,7 +8,9 @@ import { parenCount } from "@/lib/math/check";
 import { exerciseVariables } from "@/lib/math/vars";
 import { checkLine } from "@/lib/math/engine";
 import type { Exercise, CheckResult } from "@/lib/math/types";
-import { useProgress, logAttempt } from "@/lib/client";
+import { useProgress, logAttempt, usePlan } from "@/lib/client";
+import { taskFocus } from "@/lib/todayTask";
+import { typeTitle } from "@/lib/plan";
 import { xpFor } from "@/lib/progress";
 import TopBar from "@/components/TopBar";
 import { Math as M, RichText, Txt } from "@/components/MathText";
@@ -55,6 +57,10 @@ export default function PracticePage() {
   const typeInfo = topic?.types.find((t) => t.id === typeId);
   const router = useRouter();
   const { summary, profile, error, reload } = useProgress();
+  const { plan, reload: reloadPlan } = usePlan();
+  /** 🧭 המשימה של היום בנושא הזה: כמה נשאר, ומה הנושא הבא כשסיימנו */
+  const focus = useMemo(() => taskFocus(plan, typeId), [plan, typeId]);
+  const [hideFocusNote, setHideFocusNote] = useState(false);
 
   const [level, setLevel] = useState(1);
   const [ex, setEx] = useState<Exercise | null>(null);
@@ -403,7 +409,10 @@ export default function PracticePage() {
       prompt: exercise.promptLatex.slice(0, 500),
       mistakes,
       calc_uses: calcUses,
-    }).then(reload);
+    }).then(() => {
+      reload();
+      reloadPlan();
+    });
     // adaptive level – עולים אחרי 3 תרגילים נקיים ברצף (בלי רמז, בלי הצגת צעד, בלי טעות)
     if (nextClean >= 3 && level < 3) {
       setLevel(level + 1);
@@ -503,7 +512,7 @@ export default function PracticePage() {
     <>
       <TopBar tester={profile === "tester"} summary={summary} back={isCustom ? "/photo" : `/learn/${topicId}`} title={typeInfo.title} />
       <main className="max-w-3xl mx-auto w-full p-4 pb-40 space-y-3">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm flex-wrap">
           <button
             className="chip transition hover:bg-primary-tint"
             onClick={() => setShowLevelInfo(true)}
@@ -516,8 +525,37 @@ export default function PracticePage() {
             <span className="mr-1 text-muted">ⓘ</span>
           </button>
           <span className="chip">היום בסשן: {sessionCount}</span>
+          {focus.active && focus.inPlan && (
+            <span className={`chip whitespace-nowrap ${focus.complete ? "!bg-lime-tint !text-lime-ink !border-lime-deep/40" : "!bg-primary-tint !text-primary-ink !border-primary-tint"}`} title="המכסה של הנושא הזה בתוכנית של היום">
+              {focus.complete ? "✓ מכסת היום" : `משימת היום: ${focus.done}/${focus.target}`}
+            </span>
+          )}
           {stageInfo && !done && <span className="chip bg-primary-tint text-primary-ink border-primary-tint truncate">שלב: <Txt s={stageInfo.name} /></span>}
         </div>
+
+        {focus.active && !isCustom && !hideFocusNote && (focus.complete || !focus.inPlan) && (
+          <div className={`rounded-2xl px-3 py-2 text-sm ${focus.dayDone ? "bg-lime-tint text-lime-ink border border-lime-deep/40" : "bg-primary-tint text-primary-ink border border-primary/25"}`}>
+            <div className="flex items-start gap-2">
+              <span className="flex-1 leading-snug font-medium">
+                {focus.dayDone ? (
+                  <>🎉 סגרת את כל המשימות של היום – מכאן זה בונוס.</>
+                ) : focus.complete ? (
+                  <>✓ המכסה של {typeTitle(typeId)} להיום – סגורה 💪</>
+                ) : (
+                  <>הנושא הזה לא במשימה של היום.</>
+                )}
+              </span>
+              <button className="text-xs opacity-50 hover:opacity-100 -mt-0.5" onClick={() => setHideFocusNote(true)} aria-label="סגור">
+                ✕
+              </button>
+            </div>
+            {focus.next && (
+              <Link href={`/practice/${focus.next.typeId}`} className="btn-soft block w-full text-center text-xs mt-2">
+                המשימה הבאה: {typeTitle(focus.next.typeId)} ←
+              </Link>
+            )}
+          </div>
+        )}
 
         {levelNote && !done && (
           <div className={`rounded-2xl px-3 py-2 text-sm flex items-start gap-2 animate-pop ${levelNote.kind === "up" ? "bg-lime-tint text-lime-ink border border-lime-deep/40" : "bg-primary-tint text-primary-ink border border-primary/25"}`}>
@@ -681,20 +719,48 @@ export default function PracticePage() {
               תשובה סופית: <M latex={ex.finalLatex} />
               {ex.kind === "equation" && Array.isArray(ex.solutions) && " – כדאי להציב חזרה במקור ולבדוק."}
             </div>
-            <div className="flex gap-2">
-              {isCustom ? (
-                <Link href="/photo" className="btn-primary flex-1 text-lg text-center" autoFocus>
-                  לצלם עוד ←
+            {!isCustom && focus.active && focus.complete && (
+              <div className="rounded-2xl bg-lime-tint border border-lime-deep/50 px-3 py-2 text-lime-ink font-semibold animate-pop">
+                ✓ סיימת את המכסה של {typeTitle(typeId)} להיום ({focus.target} תרגילים)
+                {focus.next ? " – יש עוד נושא שמחכה." : focus.dayDone ? " – וזה היה האחרון להיום 🎉" : ""}
+              </div>
+            )}
+            {!isCustom && focus.active && focus.complete ? (
+              <div className="flex flex-col gap-2">
+                {focus.next ? (
+                  <Link href={`/practice/${focus.next.typeId}`} className="btn-primary text-lg text-center py-3" autoFocus>
+                    לנושא הבא: {typeTitle(focus.next.typeId)} ←
+                  </Link>
+                ) : (
+                  <Link href="/learn" className="btn-primary text-lg text-center py-3" autoFocus>
+                    {focus.dayDone ? "סגרת את היום ✓ למסך הבית" : "למסך הבית ←"}
+                  </Link>
+                )}
+                <div className="flex gap-2">
+                  <button className="btn-soft flex-1" onClick={next}>
+                    עוד תרגיל כאן
+                  </button>
+                  <Link href={`/learn/${topicId}`} className="btn-soft">
+                    לנושא
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                {isCustom ? (
+                  <Link href="/photo" className="btn-primary flex-1 text-lg text-center" autoFocus>
+                    לצלם עוד ←
+                  </Link>
+                ) : (
+                  <button className="btn-primary flex-1 text-lg" onClick={next} autoFocus>
+                    עוד תרגיל ←
+                  </button>
+                )}
+                <Link href={isCustom ? "/learn" : `/learn/${topicId}`} className="btn-soft">
+                  {isCustom ? "למפה" : "לנושא"}
                 </Link>
-              ) : (
-                <button className="btn-primary flex-1 text-lg" onClick={next} autoFocus>
-                  עוד תרגיל ←
-                </button>
-              )}
-              <Link href={isCustom ? "/learn" : `/learn/${topicId}`} className="btn-soft">
-                {isCustom ? "למפה" : "לנושא"}
-              </Link>
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -760,7 +826,7 @@ export default function PracticePage() {
                   <button
                     className="btn-soft text-xs"
                     onClick={() => {
-                      logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round(activeMs() / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, calc_uses: calcUses, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current) }).then(reload);
+                      logAttempt({ type_id: ex.typeId, topic_id: ex.topicId, level: ex.level, correct: false, hints: hintsUsed, reveals, wrong_lines: wrongCount, duration_sec: Math.min(Math.round(activeMs() / 1000), 3600), lines: history, prompt: ex.promptLatex.slice(0, 500), mistakes: [...mistakes, "final"], skipped: true, calc_uses: calcUses, first_input_sec: firstInputRef.current === null ? null : Math.min(3600, firstInputRef.current) }).then(() => { reload(); reloadPlan(); });
                       setSessionWrong((w) => w + wrongCount);
                       const lv = level > 1 ? level - 1 : 1;
                       setLevelNote(lv < level ? { kind: "down", text: `דילגת – ירדנו לרמה ${lv}. שלושה נקיים ברצף ומטפסים חזרה.` } : null);
