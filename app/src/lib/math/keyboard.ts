@@ -70,7 +70,7 @@ export function buildLayout(variables: string[] = []): { label: string; displayE
           { label: "+", latex: "+" },
           { label: ",", latex: ",", variants: ["\\ne", "\\pm"] },
           { label: "≠", latex: "\\ne" },
-          { label: "↵", command: ["commit"], class: "action" },
+          { label: "↵", command: ["commit"], class: "action key-commit" },
         ],
       ],
     },

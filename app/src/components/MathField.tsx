@@ -2,6 +2,7 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
 import type { MathfieldElement } from "mathlive";
 import { buildLayout } from "@/lib/math/keyboard";
+import { isCommitKey, isIntentionalCommit } from "@/lib/math/commit";
 
 export interface MathFieldHandle {
   getValue: () => string;
@@ -76,6 +77,8 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
   const [empty, setEmpty] = useState(true);
   /** פוקוס "שקט": השדה מקבל את הסמן, אבל המקלדת לא נפתחת מעצמה */
   const silentRef = useRef(false);
+  /** מתי נלחץ ↵ במקלדת – רק change שנגרר ממנו נחשב "בדקי לי את השורה" */
+  const commitAtRef = useRef(0);
   const onEnterRef = useRef(onEnter);
   const onChangeRef = useRef(onChange);
   onEnterRef.current = onEnter;
@@ -125,6 +128,7 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
   useEffect(() => {
     let cancelled = false;
     let mf: MathfieldElement | null = null;
+    let onKeycap: ((e: Event) => void) | null = null;
     setup().then((ml) => {
       if (cancelled || !hostRef.current) return;
       mf = new ml.MathfieldElement();
@@ -151,10 +155,23 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
         onChangeRef.current?.(v);
       });
       mf.addEventListener("change", () => {
-        // "change" של MathLive נורה גם בלחיצה מכוונת על ↓ וגם סתם כשהשדה מאבד פוקוס –
-        // כולל כשיוצאים מהאפליקציה למחשבון/וואטסאפ (המסך עובר לרקע). לא רוצים "לבדוק"
-        // תשובה שלא הושלמה רק כי היא יצאה לרגע; מדלגים כשהדף לא גלוי כרגע.
-        if (typeof document !== "undefined" && document.hidden) return;
+        // "change" של MathLive נורה גם בלחיצה מכוונת על ↵ וגם סתם כשהשדה מאבד פוקוס –
+        // כולל כשנוגעים בכפתור באפליקציה (מחשבון, רמז, השיטה) או יוצאים לוואטסאפ.
+        // בלי השער הזה שורה חלקית נבדקת ונרשמת כטעות רק כי הפוקוס עבר. ראה lib/math/commit.
+        let focused = false;
+        try {
+          focused = typeof mf!.hasFocus === "function" ? mf!.hasFocus() : document.activeElement === mf;
+        } catch {
+          focused = false;
+        }
+        const intentional = isIntentionalCommit({
+          intentAt: commitAtRef.current,
+          now: Date.now(),
+          hidden: typeof document !== "undefined" && document.hidden,
+          focused,
+        });
+        commitAtRef.current = 0;
+        if (!intentional) return;
         onEnterRef.current?.();
       });
       mf.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -168,10 +185,16 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
         silentRef.current = false;
         setTimeout(() => kb.show(), 0);
       });
+      // מקש ה-↵ של המקלדת המתמטית – מסמנים כוונה מפורשת לשליחה
+      onKeycap = (e: Event) => {
+        if (isCommitKey(e.target)) commitAtRef.current = Date.now();
+      };
+      document.addEventListener("pointerdown", onKeycap, true);
       if (autoFocus) setTimeout(() => mf?.focus(), 50);
     });
     return () => {
       cancelled = true;
+      if (onKeycap) document.removeEventListener("pointerdown", onKeycap, true);
       mf?.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
