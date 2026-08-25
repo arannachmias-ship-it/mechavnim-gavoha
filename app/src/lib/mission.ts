@@ -66,11 +66,11 @@ export function nudgeText(p: Plan, typeTitle: (id: string) => string): string {
   const m = missionOf(p);
   const days = p.daysLeft === 1 ? "המבחן מחר" : `עוד ${p.daysLeft} ימים למבחן`;
   if (m.state === "done") {
-    return `נוגה! ראיתי שסגרת את היום באפליקציה – ${m.doneEx} תרגילים 💪 גאה בך. ${days}, ואת בדרך הנכונה.`;
+    return `נגה! ראיתי שסגרת את היום באפליקציה – ${m.doneEx} תרגילים 💪 גאה בך. ${days}, ואת בדרך הנכונה.`;
   }
   if (m.doneEx > 0) {
-    return `היי נוגצ'קה 🙂 ראיתי שהתחלת היום (${m.doneEx}/${m.targetEx}) – נשארו רק ${m.remainEx} תרגילים, בערך ${m.remainMinutes} דקות. סוגרים את זה הערב?`;
+    return `היי נגה 🙂 ראיתי שהתחלת היום (${m.doneEx}/${m.targetEx}) – נשארו רק ${m.remainEx} תרגילים, בערך ${m.remainMinutes} דקות. סוגרים את זה הערב?`;
   }
   const first = m.firstOpenTypeId ? ` מתחילים ב"${typeTitle(m.firstOpenTypeId)}"?` : "";
-  return `היי נוגה 🙂 ${days}. היום בתוכנית: ${m.targetEx} תרגילים, בערך ${m.remainMinutes} דקות.${first} קטן עלייך 💜`;
+  return `היי נגה 🙂 ${days}. היום בתוכנית: ${m.targetEx} תרגילים, בערך ${m.remainMinutes} דקות.${first} קטן עלייך 💜`;
 }

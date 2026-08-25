@@ -86,4 +86,11 @@ describe("nudgeText", () => {
     const s = nudgeText(plan({ todayTasks: [task("like_terms", 8, 8)] }), tt);
     expect(s).toContain("גאה בך");
   });
+  it("השם נכתב נגה – בכל מצב, ובלי כינויים", () => {
+    for (const t of [task("like_terms", 8, 0), task("like_terms", 8, 5), task("like_terms", 8, 8)]) {
+      const s = nudgeText(plan({ todayTasks: [t] }), tt);
+      expect(s).toContain("נגה");
+      expect(s).not.toMatch(/נוג/);
+    }
+  });
 });
