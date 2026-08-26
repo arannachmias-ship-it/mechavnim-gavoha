@@ -88,7 +88,7 @@ export default function MethodSheet({ topicId, push = false, onPushShown }: { to
                   topic.cards.map((c, i) => (
                     <section key={i} className="rounded-2xl bg-canvas/70 p-3">
                       <h3 className="font-bold mb-1">
-                        <Txt s={c.title} />
+                        <RichText text={c.title} />
                       </h3>
                       <div className="space-y-2 leading-relaxed text-sm">
                         {c.body.map((p, j) => (

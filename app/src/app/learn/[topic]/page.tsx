@@ -52,7 +52,7 @@ export default function TopicPage() {
             )}
             {topic.cards.map((c, i) => (
               <div key={i} className="card">
-                <h3 className="font-bold text-lg mb-2"><Txt s={c.title} /></h3>
+                <h3 className="font-bold text-lg mb-2"><RichText text={c.title} /></h3>
                 <div className="space-y-2 leading-relaxed">
                   {c.body.map((p, j) => (
                     <p key={j}>
