@@ -33,7 +33,7 @@ export function buildLayout(variables: string[] = []): { label: string; displayE
           { label: "7", latex: "7" },
           { label: "8", latex: "8" },
           { label: "9", latex: "9" },
-          { label: "÷", insert: "\\frac{#@}{#?}" },
+          { label: "÷", insert: "\\frac{#@}{#?}", class: "key-frac" },
           { label: "(", latex: "(" },
           { label: ")", latex: ")" },
           /* סגירת המקלדת – בלעדיו היא נשארת פתוחה ומסתירה את התרגיל */

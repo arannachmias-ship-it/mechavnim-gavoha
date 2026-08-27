@@ -3,6 +3,7 @@ import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "re
 import type { MathfieldElement } from "mathlive";
 import { buildLayout } from "@/lib/math/keyboard";
 import { isCommitKey, isIntentionalCommit } from "@/lib/math/commit";
+import { isFracKey, prepareFraction } from "@/lib/math/fences";
 
 export interface MathFieldHandle {
   getValue: () => string;
@@ -191,9 +192,11 @@ const MathField = forwardRef<MathFieldHandle, Props>(function MathField({ placeh
         silentUntilRef.current = 0;
         setTimeout(() => kb.show(), 0);
       });
-      // מקש ה-↵ של המקלדת המתמטית – מסמנים כוונה מפורשת לשליחה
+      // מקשים של המקלדת המתמטית שצריכים טיפול משלנו:
+      // ↵ – מסמן כוונה מפורשת לשליחה. ÷ – מסדר סוגריים לפני שנבנה שבר (ראה lib/math/fences).
       onKeycap = (e: Event) => {
         if (isCommitKey(e.target)) commitAtRef.current = Date.now();
+        else if (isFracKey(e.target) && mf) prepareFraction(mf as unknown as Parameters<typeof prepareFraction>[0]);
       };
       document.addEventListener("pointerdown", onKeycap, true);
       if (autoFocus) setTimeout(() => mf?.focus(), 50);
