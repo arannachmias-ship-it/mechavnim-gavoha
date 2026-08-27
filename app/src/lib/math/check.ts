@@ -377,8 +377,18 @@ export function parseMultiAssignment(input: string, v: string): number[] | null 
   t = t.replace(/x_?1|x_?2|x₁|x₂/g, v);
   const parts = t.split(",").map((p) => p.trim()).filter(Boolean);
   const vals: number[] = [];
+  let assigned = false;
   for (const p of parts) {
-    const val = parseFinalAssignment(p, v);
+    if (p.includes("=")) {
+      const val = parseFinalAssignment(p, v);
+      if (typeof val !== "number") return null;
+      assigned = true;
+      vals.push(val);
+      continue;
+    }
+    // "x = 0, 4" – כותבים את שני הפתרונות אחרי x= אחד. ככה כותבים בבגרות, וזה תקין.
+    if (!assigned) return null;
+    const val = parseFinalAssignment(`${v}=${p}`, v);
     if (typeof val !== "number") return null;
     vals.push(val);
   }

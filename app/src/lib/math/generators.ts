@@ -1247,8 +1247,8 @@ export function genAlgFrac(level: number): Exercise {
   const domainLatex = excluded.map((e) => `x\\ne${e}`).join(",\\ ");
   const domainPlain = excluded.map((e) => `x≠${e}`).join(", ");
   const stages: StageInfo[] = [
-    S("השומר בכניסה", "לפני שנוגעים בשבר: מסתכלים על המכנה ושואלים מי יעשה אותו אפס. אלה אסורים בכניסה. כותבים בצד – ורק אז מתחילים. (המכנה: פרקי אותו לגושים – מי גרם לאפס?)", `תחום הצבה: ${domainPlain}. כתבי את זה כשורה: ${domainPlain}`),
-    S("גושים למעלה, גושים למטה", "אסור לצמצם עם חיבור וחיסור. הופכים הכול למכפלה: ועד בית / הזוג שמסתדר / תאומים הפוכים – למעלה ולמטה בנפרד.", factorNote),
+    S("גושים למעלה, גושים למטה", "מתחילים בפירוק: אסור לצמצם עם חיבור וחיסור, אז הופכים הכול למכפלה – ועד בית / הזוג שמסתדר / תאומים הפוכים – למעלה ולמטה בנפרד.", factorNote),
+    S("השומר בכניסה", "עכשיו, כשהמכנה כבר מפורק לגושים, קל לראות מי אסור בכניסה: כל גוש במכנה = 0. אלה הערכים שאסור להציב, וכותבים אותם בשורה נפרדת.", `תחום הצבה: ${domainPlain}. כתבי את זה כשורה: ${domainPlain}`),
     S("פלאש-דאון", "גוש זהה למעלה ולמטה – מושכים בידית ומורידים. גוש שלם מול גוש שלם, לא חצי גוש.", `התוצאה: ${finalLatex.replace(/\\\\frac\{(.+)\}\{(.+)\}/, "($1)/($2)").replace(/\\\\/g, "")}`),
   ];
   return {
@@ -1257,7 +1257,7 @@ export function genAlgFrac(level: number): Exercise {
     topicId: "domain",
     kind: "fracdomain",
     level,
-    instruction: "קודם תחום הצבה, ואז צמצמי:",
+    instruction: "פרקי לגושים, כתבי תחום הצבה, וצמצמי:",
     promptLatex: `\\frac{${L(num)}}{${L(den)}}`,
     originalPlain: `(${P(num)})/(${P(den)})`,
     finalPlain,
@@ -1265,8 +1265,8 @@ export function genAlgFrac(level: number): Exercise {
     finalForm: "any",
     excluded,
     stages,
-    steps: [st(domainLatex, 1, "השומר בכניסה – תחום הצבה"), st(`\\frac{${numF}}{${denF}}`, 2, "גושים למעלה ולמטה"), st(finalLatex, 3, "פלאש-דאון")],
-    stageOf: (info) => (info.node && parenCount(info.node) > 0 ? 2 : 1),
+    steps: [st(`\\frac{${numF}}{${denF}}`, 1, "גושים למעלה ולמטה"), st(domainLatex, 2, "השומר בכניסה – תחום הצבה"), st(finalLatex, 3, "פלאש-דאון")],
+    stageOf: (info) => (info.node && parenCount(info.node) > 0 ? 1 : 0),
     traps,
   };
 }

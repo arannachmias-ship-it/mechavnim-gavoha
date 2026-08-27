@@ -107,34 +107,50 @@ export function checkLine(ex: Exercise, history: string[], rawInput: string): Ch
 /* ---------------- שברים אלגבריים עם תחום הצבה ---------------- */
 function checkFracDomain(ex: Exercise, history: string[], rawInput: string): CheckResult {
   const excluded = ex.excluded ?? [];
+  const algebra = history.filter((h) => parseDomainLine(h) === null);
   const domainDone = history.some((h) => parseDomainLine(h) !== null);
+  /** האם כבר יש בהיסטוריה שורה מצומצמת עד הסוף (פלאש-דאון בוצע) */
+  const reduced = algebra.some((h) => isReducedLine(ex, h));
   const dom = parseDomainLine(rawInput);
   if (dom) {
-    if (domainDone) return { status: "same", message: "תחום ההצבה כבר כתוב. עכשיו מפרקים לגושים.", stage: 1 };
+    if (domainDone) return { status: "same", message: "תחום ההצבה כבר כתוב.", stage: reduced ? 2 : 1 };
     const missing = excluded.filter((e) => !dom.some((d) => near(d, e)));
     const extra = dom.filter((d) => !excluded.some((e) => near(d, e)));
     if (!missing.length && !extra.length) {
-      return { status: "ok", message: "השומר בכניסה עומד. עכשיו מותר לגעת בשבר.", stage: 1 };
+      if (reduced) return { status: "done", message: "גושים למעלה, גושים למטה, גוש מול גוש ירד – ועכשיו גם השומר בכניסה. זו תשובה של בגרות. ✔", stage: ex.stages.length };
+      const factored = algebra.length > 0;
+      return {
+        status: "ok",
+        message: factored ? "השומר בכניסה עומד. עכשיו פלאש-דאון – גוש שלם מול גוש שלם." : "השומר בכניסה עומד. עכשיו גושים: מפרקים למכפלה למעלה ולמטה.",
+        stage: factored ? 2 : 0,
+      };
     }
     if (missing.length && !extra.length) {
-      return { status: "wrong", message: `חסר מישהו ברשימה של השומר. המכנה מתאפס בעוד ערך – מי גרם לאפס? (רמז: פרקי את המכנה לגושים.)`, stage: 0, mistake: "domain_missing" };
+      return { status: "wrong", message: `חסר מישהו ברשימה של השומר. המכנה מתאפס בעוד ערך – מי גרם לאפס? (כל גוש במכנה = 0.)`, stage: 1, mistake: "domain_missing" };
     }
-    return { status: "wrong", message: `${extra.length === 1 ? "הערך " + extra[0] : "חלק מהערכים"} לא מאפס את המכנה. השומר אוסר רק על מי שבאמת עושה אפס למטה. בדקי בהצבה.`, stage: 0, mistake: "domain_wrong" };
+    return { status: "wrong", message: `${extra.length === 1 ? "הערך " + extra[0] : "חלק מהערכים"} לא מאפס את המכנה. השומר אוסר רק על מי שבאמת עושה אפס למטה. בדקי בהצבה.`, stage: 1, mistake: "domain_wrong" };
   }
-  // an algebra line
+  // שורת אלגברה. מפרקים לגושים מותר בלי תחום הצבה – זה בדיוק מה שמגלה מי אסור בכניסה.
   const input = clean(rawInput);
-  if (!domainDone) {
-    // the ONE hard stop in the app: no algebra before the domain
-    return {
-      status: "wrong",
-      message: "רגע – עוד לא כתבת תחום הצבה. לא מצמצמים לפני שהשומר בכניסה עומד – אחרת עלולים לחלק באפס והיקום קורס. כתבי קודם x≠…",
-      stage: 0,
-      mistake: "domain_first",
-    };
+  const res = checkExpr(ex, algebra, input);
+  if (res.status === "done") {
+    if (!domainDone) {
+      // צמצמה – אבל בלי השומר זו עוד לא תשובה. מקבלים את השורה, ומבקשים את תחום ההצבה
+      // מהמכנה המפורק שנמצא ממש מעליה (בלי לספור טעות ובלי לכתוב שוב את הפירוק).
+      return { status: "ok", message: "יפה, זה מצומצם. נשאר השומר: מהמכנה המפורק – מי מאפס אותו? כתבי x≠…", stage: 1 };
+    }
+    return { ...res, message: "יפה – גושים למעלה, גושים למטה, ורק גוש מול גוש הצטמצם. עם תחום ההצבה לידו זו תשובה של בגרות. ✔" };
   }
-  const res = checkExpr(ex, history.filter((h) => parseDomainLine(h) === null), input);
-  if (res.status === "done") return { ...res, message: "יפה – גושים למעלה, גושים למטה, ורק גוש מול גוש הצטמצם. עם תחום ההצבה לידו זו תשובה של בגרות. ✔" };
-  return { ...res, stage: Math.max(res.stage, 1) };
+  return res;
+}
+
+/** שורה שכבר מצומצמת עד הסוף (שוות-ערך למקור ובמורכבות של התשובה הסופית) */
+function isReducedLine(ex: Exercise, line: string): boolean {
+  const node = parseExpr(clean(line));
+  const fin = ex.finalPlain ? parseExpr(ex.finalPlain) : null;
+  if (!node || !fin) return false;
+  if (!exprEquivalent(normalizeInput(clean(line)), ex.finalPlain!)) return false;
+  return complexity(node) <= complexity(fin);
 }
 
 /* ---------------- expressions ---------------- */
@@ -244,15 +260,27 @@ function checkEquation(ex: Exercise, history: string[], input: string): CheckRes
   }
   const multi = parseMultiAssignment(input, v);
   if (multi && Array.isArray(sol)) {
-    if (sameRoots(multi, sol)) return { status: "done", message: "מצוין! הצבי לבדוק ותסמני. ✔", stage: ex.stages.length };
-    // partial (one of two roots)
-    if (multi.length === 1 && sol.length === 2 && sol.some((s) => near(s, multi[0]))) {
-      const lostZero = sol.some((s) => near(s, 0)) && !near(multi[0], 0);
+    // פתרונות שכבר נכתבו בשורות קודמות נספרים גם הם – "x=0" בשורה אחת ו-"x=-1" בשורה
+    // הבאה זו תשובה שלמה בדיוק כמו "x=0, x=-1" בשורה אחת.
+    const before = history.flatMap((h) => parseMultiAssignment(clean(h), v) ?? []);
+    const all: number[] = [];
+    for (const r of [...before, ...multi]) if (!all.some((a) => near(a, r))) all.push(r);
+    if (sameRoots(all, sol)) {
+      return {
+        status: "done",
+        message: before.length ? "שני הפתרונות על המסך. הצבי לבדוק ותסמני. ✔" : "מצוין! הצבי לבדוק ותסמני. ✔",
+        stage: ex.stages.length,
+      };
+    }
+    const bogus = all.filter((a) => !sol.some((s) => near(s, a)));
+    const missing = sol.filter((s) => !all.some((a) => near(a, s)));
+    if (!bogus.length && missing.length) {
+      const lostZero = missing.some((m) => near(m, 0));
       return {
         status: "ok",
         message: lostZero
-          ? "זה אחד הפתרונות – אבל x=0 גם פותר. אם חילקת ב-x, איבדת אותו: אף פעם לא מחלקים ב-x לפני שבודקים אם הוא אפס."
-          : "זה אחד הפתרונות. חזקה זוגית תמיד מחזירה שניים – חיובי ושלילי. מי ששכח את המינוס שכח חצי מהתשובה.",
+          ? "זה פתרון אחד ✓ אבל x=0 גם פותר – אם חילקת ב-x, איבדת אותו. אף פעם לא מחלקים ב-x לפני שבודקים אם הוא אפס."
+          : "זה פתרון אחד ✓ נשאר עוד אחד – כל גוש שווה אפס בנפרד.",
         stage: ex.stages.length - 1,
         mistake: lostZero ? "divx" : "pm",
       };
