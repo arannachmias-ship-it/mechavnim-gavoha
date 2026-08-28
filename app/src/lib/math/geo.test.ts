@@ -198,27 +198,3 @@ describe("geo – גאומטריה אנליטית", () => {
     }
   });
 });
-
-describe("geo – שתי קואורדינטות בשתי שורות", () => {
-  it("y=12 בשורה אחת ו-x=0 בשורה הבאה מסמנים את החיתוך עם ציר y", () => {
-    for (let s = 1; s < 25; s++) {
-      const ex = generate("line_read", 1, s);
-      const py = ask(ex, "Py");
-      const hist = [`m=${fmt(ex.params!.m)}`];
-      const r1 = checkLine(ex, hist, `y=${fmt(py.y!)}`);
-      expect(r1.status).toBe("ok");
-      expect(geoChecklist(ex, [...hist, `y=${fmt(py.y!)}`]).find((c) => c.key === "Py")!.done).toBe(false);
-      const r2 = checkLine(ex, [...hist, `y=${fmt(py.y!)}`], `x=${fmt(py.x!)}`);
-      expect(["ok", "done"]).toContain(r2.status);
-      const list = geoChecklist(ex, [...hist, `y=${fmt(py.y!)}`, `x=${fmt(py.x!)}`]);
-      expect(list.find((c) => c.key === "Py")!.done).toBe(true);
-    }
-  });
-  it("הנקודה השלמה עדיין עובדת, ואין סימון כפול", () => {
-    const ex = generate("line_read", 1, 7);
-    const py = ask(ex, "Py");
-    const hist = [`m=${fmt(ex.params!.m)}`, `(${fmt(py.x!)},${fmt(py.y!)})`];
-    expect(geoChecklist(ex, hist).find((c) => c.key === "Py")!.done).toBe(true);
-    expect(checkLine(ex, hist, `y=${fmt(py.y!)}`).status).not.toBe("wrong");
-  });
-});

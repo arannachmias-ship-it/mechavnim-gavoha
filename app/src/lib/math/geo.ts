@@ -90,13 +90,6 @@ export function extractPoints(s: string): { points: { x: number; y: number }[]; 
 /* ---------- מצב: אילו בקשות כבר נמצאו ---------- */
 export interface GeoState {
   resolved: Set<string>;
-  /**
-   * קואורדינטות בודדות שנכתבו בשורות נפרדות. נגה כותבת לפעמים "y=12" בשורה אחת
-   * ו-"x=0" בשורה הבאה במקום "(0,12)" – וזו תשובה שלמה לכל דבר, אז אוספים אותן
-   * ומסמנים את הנקודה כשנמצאו שתיהן.
-   */
-  xs?: number[];
-  ys?: number[];
 }
 
 function asksOf(ex: Exercise): GeoAsk[] {
@@ -211,13 +204,8 @@ function handleAssign(ex: Exercise, st: GeoState, k: string, value: number, chai
     const hit = pts.find((a) => near(k === "x" ? a.x! : a.y!, value));
     if (hit) {
       if (!chainOk) return { kind: "wrong", message: `${k}=${fmt(value)} נכון, אבל החישוב באמצע לא נותן את זה. בדקי.` };
-      // זוכרים את הקואורדינטה; אם יחד עם קודמת היא משלימה נקודה שביקשנו – סימנו אותה
-      const bag = k === "x" ? (st.xs ??= []) : (st.ys ??= []);
-      if (!bag.some((c) => near(c, value))) bag.push(value);
-      const complete = pts.find((a) => !st.resolved.has(a.key) && (st.xs ?? []).some((x) => near(x, a.x!)) && (st.ys ?? []).some((y) => near(y, a.y!)));
-      if (complete) return { kind: "resolve", keys: [complete.key], message: `יחד עם מה שכתבת קודם זו הנקודה (${fmt(complete.x!)}, ${fmt(complete.y!)}).` };
       const other = k === "x" ? "y" : "x";
-      return { kind: "ok", message: st.resolved.has(hit.key) ? "נכון." : `${k}=${fmt(value)} – נכון. עכשיו ה-${other} שלה: או בשורה נפרדת, או כנקודה שלמה (x, y).` };
+      return { kind: "ok", message: st.resolved.has(hit.key) ? "נכון." : `${k}=${fmt(value)} – נכון. עכשיו מצאי את ה-${other} שלה, וכתבי את הנקודה השלמה: (x, y).` };
     }
     // maybe a coordinate of a point on the curve for an axis intersection ask? generic wrong
     const trap = (ex.geoTraps ?? []).find((t) => t.key === k && typeof t.value === "number" && near(t.value, value, 1e-3));
@@ -321,7 +309,7 @@ export function geoLine(ex: Exercise, st: GeoState, raw: string): LineOutcome {
   if (parts.length > 1 && parts.every((p) => p.includes("="))) {
     // sequential
     const keys: string[] = [];
-    const tmp: GeoState = { resolved: new Set(st.resolved), xs: [...(st.xs ?? [])], ys: [...(st.ys ?? [])] };
+    const tmp: GeoState = { resolved: new Set(st.resolved) };
     let lastMsg: string | undefined;
     for (const p of parts) {
       const o = geoLine(ex, tmp, p);
